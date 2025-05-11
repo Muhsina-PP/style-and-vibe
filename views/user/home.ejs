@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Male_Fashion Template">
+    <meta name="keywords" content="Male_Fashion, unica, creative, html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" href="/img/favicon.png" type="image/png">
+    <title>STYLE AND VIBE</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+    <!-- Css Styles -->
+    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
+    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
+    <link rel="stylesheet" href="css/nice-select.css" type="text/css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
+    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+</head>
+
+<body>
+    <!-- Page Preloder -->
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+
+     
+    <%- include("../../views/partial/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+<style>
+  .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      background-color: #ff6b6b;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.3s;
+      cursor: pointer;
+      text-align: center;
+  }
+
+
+  .btn:hover {
+      background-color: #ff4c4c;
+      transform: translateY(-2px);
+  }
+
+
+  .btn:active {
+      transform: translateY(1px);
+  }
+  .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 50%;
+      color: #ff6b6b;
+      font-size: 18px;
+      z-index: 10;
+      transition: background-color 0.3s, color 0.3s, transform 0.3s;
+  }
+
+
+  .wishlist-btn:hover {
+      background-color: rgba(255, 255, 255, 1);
+      color: #ff4c4c;
+      transform: translateY(-2px);
+  }
+
+
+  .wishlist-btn:active {
+      transform: translateY(1px);
+  }
+
+
+  .product-img-action-wrap {
+      position: relative;
+  }
+
+
+  .product-img {
+      position: relative;
+      display: block;
+      overflow: hidden;
+  }
+
+
+  .product-cart-wrap {
+      border: 1px solid #eee;
+      padding: 20px;
+      margin-bottom: 30px;
+  }
+
+
+  .product-content-wrap h6 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 5px;
+  }
+
+
+  .product-content-wrap h5 {
+      font-size: 16px;
+      color: #ff6b6b;
+      margin-bottom: 10px;
+  }
+
+
+  .product-content-wrap a {
+      display: inline-block;
+      padding: 8px 12px;
+      background-color: #ff6b6b;
+      color: white;
+      text-transform: uppercase;
+      font-size: 14px;
+      border-radius: 4px;
+      text-decoration: none;
+  }
+
+
+  .product-content-wrap a:hover {
+      background-color: #ff4c4c;
+  }
+  
+
+
+</style>
+<section class="hero">
+  <div class="hero__slider owl-carousel">
+      <div class="hero__items set-bg" data-setbg="img/hero/hero-1.jpg">
+          <div class="container">
+              <div class="row">
+                  <div class="col-xl-5 col-lg-7 col-md-8">
+                      <div class="hero__text">
+                          <h6>Summer Collection</h6>
+                          <h2>Fall - Winter Collections 2030</h2>
+                          <p>A specialist label creating luxury essentials. Ethically created.</p>
+                          <a href="#" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div class="hero__items set-bg" data-setbg="img/hero/hero-2.jpg">
+          <div class="container">
+              <div class="row">
+                  <div class="col-xl-5 col-lg-7 col-md-8">
+                      <div class="hero__text">
+                          <h6>Summer Collection</h6>
+                          <h2>Fall - Winter Collections 2030</h2>
+                          <p>A specialist label creating luxury essentials.</p>
+                          <a href="#" class="primary-btn">Shop now <span class="arrow_right"></span></a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>
+
+  <!-- Banner Section -->
+  <section class="product spad">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <ul class="filter__controls">
+            <li data-filter=".new-arrivals" style="margin-top: 50px;">Banners</li>
+          </ul>
+        </div>
+      </div>
+      <div class="row product__filter">
+        <% for (let i = 0; i < banner.length; i++) { %>
+          <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+            <div class="product-cart-wrap mb-30">
+              <div class="product-img-action-wrap">
+                <div class="product-img product-img-zoom">
+                  <a href="<%= banner[i].link %>">
+                    <img src="/uploads/re-image/<%= banner[i].image %>" alt="<%= banner[i].title %>" >
+                  </a>
+                </div>
+              </div>
+              <div class="product-content-wrap">
+                <h6><%= banner[i].title %></h6>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+  
+  
+
+
+<section class="product spad">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-12">
+              <ul class="filter__controls">
+                  <li data-filter=".new-arrivals">New Arrivals</li>
+              </ul>
+          </div>
+      </div>
+      <div class="row product__filter">
+        <% for(let i=0; i<products.length; i++){%>
+              <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+                  <div class="product-cart-wrap mb-30">
+                      <div class="product-img-action-wrap">
+                          <div class="product-img product-img-zoom">
+                              <a href="/productDetails?id=<%=products[i]._id%>">
+                                  <img class="default-img" src="/uploads/re-image/<%=products[i].productImage[0]%>" alt="<%=products[i].productName%>">
+                              </a>
+                          </div>
+                          <a href="/addToWishlist?id=<%products[i]._id%>" class="wishlist-btn">
+                              <i class="fas fa-heart"></i>
+                          </a>
+                      </div>
+
+
+                      <div class="product-content-wrap">
+                          <h6><%=products[i].productName%></h6>
+                          <h5><%=products[i].salesPrice%></h5>
+                          <a href="/addToCart?id=<%=products[i]._id%>">Add To Cart</a>
+                      </div>
+                  </div>
+              </div>
+            <%}%>
+      </div>
+  </div>
+</section>
+
+
+    <%- include("../../views/partial/user/footer") %>
+
+  <!-- Search Begin -->
+<div class="search-model">
+  <div class="h-100 d-flex align-items-center justify-content-center">
+      <div class="search-close-switch">+</div>
+      <form class="search-model-form">
+          <input type="text" id="search-input" placeholder="Search here.....">
+      </form>
+  </div>
+</div>
+<!-- Search End -->
+
+<!-- Js Plugins -->
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/jquery.nice-select.min.js"></script>
+<script src="js/jquery.nicescroll.min.js"></script>
+<script src="js/jquery.magnific-popup.min.js"></script>
+<script src="js/jquery.countdown.min.js"></script>
+<script src="js/jquery.slicknav.js"></script>
+<script src="js/mixitup.min.js"></script>
+<script src="js/owl.carousel.min.js"></script>
+<script src="js/main.js"></script>
+</body>
+
+</html>
+
+

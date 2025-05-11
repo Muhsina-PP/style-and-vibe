@@ -1,0 +1,159 @@
+<%- include("../../views/partial/user/header") %>
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
+
+  main.container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  }
+
+  h2 {
+    font-weight: 700;
+    color: #333;
+  }
+
+  form h4 {
+    margin-bottom: 1rem;
+    color: #495057;
+    font-weight: 600;
+  }
+
+  .form-label {
+    font-weight: 500;
+  }
+
+  .list-group-item {
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    background-color: transparent;
+  }
+
+  .list-group-item:last-child {
+    border-bottom: none;
+  }
+
+  .btn-success {
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 0.6rem;
+    border-radius: 10px;
+  }
+
+  .form-check-input {
+    margin-top: 0.4rem;
+  }
+
+  .text-muted {
+    color: #6c757d !important;
+  }
+
+  @media (max-width: 768px) {
+    main.container {
+      padding: 1rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+    }
+    .btn-success {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+
+<main class="main container mt-5">
+  <h2 class="text-center fw-bold mb-4">🧾 Checkout</h2>
+
+  <form action="/place-order" method="POST" class="row g-4" id="checkoutForm">
+    <!-- Shipping Address -->
+    <div class="col-md-6">
+      <h4>📦 Shipping Address</h4>
+      <div class="mb-3">
+        <label for="fullName" class="form-label">Full Name</label>
+        <input type="text" name="address[fullName]" id="fullName" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="phone" class="form-label">Phone</label>
+        <input type="tel" name="address[phone]" id="phone" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="addressLine1" class="form-label">Address Line 1</label>
+        <input type="text" name="address[addressLine1]" id="addressLine1" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="addressLine2" class="form-label">Address Line 2</label>
+        <input type="text" name="address[addressLine2]" id="addressLine2" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label for="city" class="form-label">City</label>
+        <input type="text" name="address[city]" id="city" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="state" class="form-label">State</label>
+        <input type="text" name="address[state]" id="state" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="postalCode" class="form-label">Postal Code</label>
+        <input type="text" name="address[postalCode]" id="postalCode" class="form-control" required>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-md-6">
+      <h4>🛒 Order Summary</h4>
+      <ul class="list-group mb-3">
+        <% cartItems.forEach(item => { %>
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div>
+              <% if (item.productId) { %>
+               
+              <h6 class="my-0"><%= item.productId.productName %></h6>
+              <small class="text-muted">Qty: <%= item.quantity %></small>
+
+              <% }else{ %>
+                <h6 class="my-0">Product not available</h6>
+                <small class="text-muted">Qty: <%= item.quantity %></small>
+              <% } %>
+            </div>
+            <span class="text-muted">₹<%= item.totalPrice ? '₹' + item.totalPrice : '₹0'  %></span>
+          </li>
+        <% }) %>
+        <li class="list-group-item d-flex justify-content-between">
+          <strong>Total</strong>
+          <strong>₹<%= total %></strong>
+        </li>
+      </ul>
+
+      <!-- Payment Method -->
+      <div class="mb-3">
+        <label class="form-label fw-bold">💳 Payment Method</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="paymentMethod" value="COD" id="cod" checked>
+          <label class="form-check-label" for="cod">Cash on Delivery</label>
+        </div>
+        <!-- For future: Add Razorpay or other options here -->
+      </div>
+
+      <button type="submit" class="btn btn-success w-100">Place Order</button>
+    </div>
+  </form>
+</main>
+
+<!-- Optional SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('success') === 'true') {
+    Swal.fire({
+      title: 'Order Placed!',
+      text: 'Your order has been successfully placed.',
+      icon: 'success',
+      confirmButtonText: 'OK'
+    });
+  }
+</script>
+

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Profile</title>
+  <link rel="stylesheet" href="/css/styles.css"> <!-- Optional custom CSS -->
+
+  <style>
+    body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 500px;
+  margin: 50px auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+form div {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+input[type="file"] {
+  padding: 5px;
+}
+
+img {
+  display: block;
+  margin-top: 10px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+}
+
+a {
+  color: #007bff;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button[type="submit"] {
+  width: 100%;
+  background: #007bff;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button[type="submit"]:hover {
+  background: #0056b3;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Edit Your Profile</h2>
+
+    <% if (user) { %>
+      <form action="/edit-profile" method="POST" enctype="multipart/form-data">
+        <div>
+          <label>Full Name</label>
+          <input type="text" name="name" value="<%= user.name %>" required />
+        </div>
+
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" value="<%= user.email %>" required />
+        </div>
+
+        <div>
+          <label>Change Password</label>
+          <input type="password" name="newPassword" placeholder="New password" />
+        </div>
+
+        <div>
+          <a href="/forgot-password">Forgot Password?</a>
+        </div>
+
+        <div>
+          <label>Change Profile Image</label>
+          <input type="file" name="profileImage" accept="image/*" />
+          <% if (user.profileImage) { %>
+            <img src="/uploads/<%= user.profileImage %>" alt="Profile Image" style="width:100px;height:100px;">
+          <% } %>
+        </div>
+
+        <button type="submit">Save Changes</button>
+      </form>
+    <% } else { %>
+      <p style="color:red;">User data not loaded.</p>
+    <% } %>
+  </div>
+</body>
+</html>

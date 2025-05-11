@@ -1,0 +1,394 @@
+<%- include("../../views/partial/user/headerp") %>
+
+<!-- External CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+
+<!-- Toast container for notifications -->
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1050;"></div>
+
+<div class="container-fluid mt-4">
+  <div class="row">
+    <!-- Left sidebar space (assumed to be included in the partial) -->
+    <div class="col-md-3">
+      <!-- Sidebar placeholder -->
+    </div>
+    
+    <!-- Main content area -->
+    <div class="col-md-9">
+      <!-- User Profile Card -->
+      <div class="card shadow rounded-4 border-0 mb-4">
+        <div class="card-header bg-success text-white rounded-top-4 py-3">
+          <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>User Profile</h5>
+        </div>
+        <div class="card-body py-4">
+          <div class="row align-items-center">
+            <!-- Profile Image -->
+            <div class="col-md-3 text-center">
+              <div class="position-relative d-inline-block mb-3">
+                <img id="profileDisplayImage" 
+                     src="<%= user.profileImage || '/img/hero/avatar.jpeg' %>?t=<%= Date.now() %>" 
+                     class="rounded-circle border border-3 border-success profile-image" 
+                     alt="Profile Image" 
+                     style="width: 120px; height: 120px; object-fit: cover;"
+                     onerror="this.src='/img/hero/avatar.jpeg'">
+              </div>
+              <div>
+                <button type="button" id="changePhotoBtn" class="btn btn-sm btn-outline-success">
+                  <i class="bi bi-camera-fill"></i> Change Photo
+                </button>
+                <input type="file" name="profileImage" id="profileImageInput" accept="image/*" style="display: none;" />
+              </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="col-md-9">
+              <form action="/update-profile" method="POST">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>Full Name</strong></label>
+                    <input type="text" name="name" class="form-control" value="<%= user.name %>" required>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>Phone Number</strong></label>
+                    <input type="text" name="phone" class="form-control" value="<%= user.phone %>" required>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label"><strong>Email Address</strong></label>
+                  <input type="email" class="form-control" value="<%= user.email %>" disabled>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle me-1"></i> Save Changes
+                  </button>
+                  <a href="/change-email" class="btn btn-outline-success">
+                    <i class="bi bi-envelope me-1"></i> Change Email
+                  </a>
+                  <a href="/change-password" class="btn btn-outline-success">
+                    <i class="bi bi-shield-lock me-1"></i> Change Password
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Address Management Card -->
+      <div class="card shadow rounded-4 border-0">
+        <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center py-3">
+          <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i>My Addresses</h5>
+          <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+            <i class="bi bi-plus-circle me-1"></i> Add New Address
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <% if (addresses && addresses.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Contact</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% addresses.forEach((address, index) => { %>
+                    <tr>
+                      <td>
+                        <span class="badge bg-<%= address.addressType === 'Home' ? 'success' : (address.addressType === 'Work' ? 'info' : 'secondary') %>">
+                          <%= address.addressType %>
+                        </span>
+                      </td>
+                      <td><%= address.name %></td>
+                      <td>
+                        <%= address.landMark %>, <%= address.city %>,<br>
+                        <%= address.state %> - <%= address.pincode %>
+                      </td>
+                      <td>
+                        <%= address.phone %>
+                        <% if (address.altphone) { %><br><small class="text-muted">Alt: <%= address.altphone %></small><% } %>
+                      </td>
+                      <td class="text-end">
+                        <a href="/editAddress/<%= address._id %>" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                        
+                        <a href="/deleteAddress/<%= address._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure want to delete this address?')">Delete</a>
+
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <div class="mb-3">
+                <i class="bi bi-geo-alt text-muted" style="font-size: 3rem;"></i>
+              </div>
+              <h6 class="text-muted mb-4">You haven't added any addresses yet</h6>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                <i class="bi bi-plus-circle me-2"></i>Add Your First Address
+              </button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addressForm" action="/addAddress" method="POST">
+          <input type="hidden" id="addressId" name="addressId">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Phone Number</label>
+              <input type="text" name="phone" class="form-control" maxlength="10" pattern="\d{10}" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Alternate Phone (Optional)</label>
+            <input type="text" name="altphone" class="form-control" maxlength="10" pattern="\d{10}">
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">City</label>
+              <input type="text" name="city" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">State</label>
+              <input type="text" name="state" class="form-control" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Landmark</label>
+              <input type="text" name="landMark" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Pincode</label>
+              <input type="text" name="pincode" class="form-control" maxlength="6" pattern="\d{6}" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Address Type</label>
+            <select name="addressType" class="form-select" required>
+              <option value="Home">Home</option>
+              <option value="Work">Work</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-success">Save Address</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Modal -->
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cropModalLabel">Crop Image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <img id="imageToCrop" src="" style="width: 100%; max-height: 400px;" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cropAndUpload" class="btn btn-success">Crop & Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- External JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Image Cropper Logic
+  document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('profileImageInput');
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+    const image = document.getElementById('imageToCrop');
+    let cropper;
+    
+    // Connect change photo button with file input
+    if (changePhotoBtn) {
+      changePhotoBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (input) {
+          input.click();
+        }
+      });
+    }
+
+    if (input) {
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            image.src = reader.result;
+            cropModal.show();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    document.getElementById('cropModal').addEventListener('shown.bs.modal', () => {
+      cropper = new Cropper(image, {
+        aspectRatio: 1,
+        viewMode: 1
+      });
+    });
+
+    document.getElementById('cropModal').addEventListener('hidden.bs.modal', () => {
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+    });
+
+    document.getElementById('cropAndUpload').addEventListener('click', () => {
+      if (!cropper) return;
+      
+      const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+      canvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append('profileImage', blob, 'cropped.jpg');
+
+        // Show loading state
+        const profileImg = document.getElementById('profileDisplayImage');
+        const originalSrc = profileImg.src;
+        const loaderHtml = '<div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>';
+        const imgContainer = profileImg.parentElement;
+        const loader = document.createElement('div');
+        loader.innerHTML = loaderHtml;
+        loader.className = 'position-absolute top-50 start-50 translate-middle';
+        imgContainer.style.position = 'relative';
+        imgContainer.appendChild(loader);
+        profileImg.style.opacity = '0.5';
+
+        fetch('/upload-profile-image', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Update image without page reload
+            const newImgSrc = data.imageUrl || originalSrc;
+            profileImg.src = newImgSrc + '?t=' + new Date().getTime();
+            showToast('Profile image updated successfully', 'success');
+          } else {
+            showToast('Upload failed: ' + (data.message || 'Unknown error'), 'danger');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          showToast('Upload failed: ' + err.message, 'danger');
+        })
+        .finally(() => {
+          // Remove loader
+          imgContainer.removeChild(loader);
+          profileImg.style.opacity = '1';
+          cropModal.hide();
+        });
+      }, 'image/jpeg');
+    });
+  });
+
+  // Address Management Logic
+  function editAddress(addressId) {
+    // Fetch address data and populate form
+    fetch(`/get-address/${addressId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.address) {
+          document.getElementById('addAddressModalLabel').textContent = 'Edit Address';
+          document.getElementById('addressId').value = addressId;
+          document.getElementById('addressForm').action = '/updateAddress';
+          
+          const form = document.getElementById('addressForm');
+          form.elements['name'].value = data.address.name;
+          form.elements['phone'].value = data.address.phone;
+          form.elements['altphone'].value = data.address.altphone || '';
+          form.elements['city'].value = data.address.city;
+          form.elements['state'].value = data.address.state;
+          form.elements['landMark'].value = data.address.landMark;
+          form.elements['pincode'].value = data.address.pincode;
+          form.elements['addressType'].value = data.address.addressType;
+          
+          new bootstrap.Modal(document.getElementById('addAddressModal')).show();
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        showToast('Failed to load address data', 'danger');
+      });
+  }
+
+  function deleteAddress(addressId) {
+    if (confirm('Are you sure you want to delete this address?')) {
+      window.location.href = `/deleteAddress/${addressId}`;
+    }
+  }
+
+  // Reset modal form when opening for new address
+  document.getElementById('addAddressModal').addEventListener('hidden.bs.modal', () => {
+    document.getElementById('addAddressModalLabel').textContent = 'Add New Address';
+    document.getElementById('addressId').value = '';
+    document.getElementById('addressForm').action = '/addAddress';
+    document.getElementById('addressForm').reset();
+  });
+
+  // Toast notification function
+  function showToast(message, type = 'success') {
+    const toastContainer = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', () => {
+      toastContainer.removeChild(toast);
+    });
+  }
+</script>
