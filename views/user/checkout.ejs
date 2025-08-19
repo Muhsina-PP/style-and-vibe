@@ -51,6 +51,56 @@
     color: #6c757d !important;
   }
 
+  .address-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .address-card:hover {
+    border-color: #6c757d;
+  }
+
+  .address-card.selected {
+    border-color: #28a745;
+    background-color: #f0fff4;
+  }
+
+  .address-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .address-actions button {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+  }
+
+  .new-address-btn {
+    margin-bottom: 15px;
+  }
+
+  .product-image {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    margin-right: 10px;
+  }
+
+  /* Additional styles for toggle functionality */
+  #newAddressForm {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+  }
+
   @media (max-width: 768px) {
     main.container {
       padding: 1rem;
@@ -64,7 +114,7 @@
   }
 </style>
 
-
+<!-- Main Checkout Section -->
 <main class="main container mt-5">
   <h2 class="text-center fw-bold mb-4">🧾 Checkout</h2>
 
@@ -72,33 +122,90 @@
     <!-- Shipping Address -->
     <div class="col-md-6">
       <h4>📦 Shipping Address</h4>
-      <div class="mb-3">
-        <label for="fullName" class="form-label">Full Name</label>
-        <input type="text" name="address[fullName]" id="fullName" class="form-control" required>
+
+      <div id="addressSelection">
+        <% if(addresses && addresses.length > 0) { %>
+          <% addresses.forEach((address, index) => { %>
+            <div class="address-card <%= address.isDefault ? 'selected' : '' %>" onclick="selectAddress(this, '<%= address._id %>')">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="selectedAddressId" value="<%= address._id %>" 
+                  id="address<%= index %>" <%= address.isDefault ? 'checked' : '' %>>
+                <label class="form-check-label" for="address<%= index %>">
+                  <strong><%= address.name %></strong>
+                </label>
+              </div>
+              <p class="mb-1"><%= address.addressType  %></p>
+              <% if(address.addressLine2) { %>
+                <p class="mb-1"><%= address.landMark  %></p>
+              <% } %>
+              <p class="mb-1"><%= address.city %>, <%= address.state %> <%= address.pincode %></p>
+              <p class="mb-2">Phone: <%= address.phone %></p> Alt Phone: <%= address.altphone %></p>
+              <div class="address-actions">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="editAddress('<%= address._id %>')">Edit</button>
+              </div>
+            </div>
+          <% }); %>
+        <% } %>
+        
+        <button type="button" class="btn btn-outline-primary new-address-btn" onclick="showNewAddressForm()">
+          + Add New Address
+        </button>
       </div>
-      <div class="mb-3">
-        <label for="phone" class="form-label">Phone</label>
-        <input type="tel" name="address[phone]" id="phone" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="addressLine1" class="form-label">Address Line 1</label>
-        <input type="text" name="address[addressLine1]" id="addressLine1" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="addressLine2" class="form-label">Address Line 2</label>
-        <input type="text" name="address[addressLine2]" id="addressLine2" class="form-control">
-      </div>
-      <div class="mb-3">
-        <label for="city" class="form-label">City</label>
-        <input type="text" name="address[city]" id="city" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="state" class="form-label">State</label>
-        <input type="text" name="address[state]" id="state" class="form-control" required>
-      </div>
-      <div class="mb-3">
-        <label for="postalCode" class="form-label">Postal Code</label>
-        <input type="text" name="address[postalCode]" id="postalCode" class="form-control" required>
+
+      <!-- New Address Form -->
+      <div id="newAddressForm" style="display: none;">
+        <input type="hidden" id="editAddressId" name="editAddressId" value="">
+        <div id="addressFormErrors" class="alert alert-danger" style="display: none;"></div>
+
+        <div class="mb-3">
+          <label for="addressType" class="form-label">Address Type:</label>
+          <input type="text" class="form-control border-3" id="addressType" name="addressType" placeholder="Home or Work" required>
+          <div class="invalid-feedback">Please enter address type</div>
+        </div>
+        <div class="mb-3">
+          <label for="name" class="form-label">Name</label>
+          <input type="text" class="form-control border-3" id="name" name="name" required>
+          <div class="invalid-feedback">Please enter a name</div>
+        </div>
+        <div class="mb-3">
+          <label for="landMark" class="form-label">Land Mark</label>
+          <input type="text" class="form-control border-3" id="landMark" name="landMark" required>
+          <div class="invalid-feedback">Please enter a landmark</div>
+        </div> 
+        <div class="mb-3">
+          <label for="city" class="form-label">City</label>
+          <input type="text" class="form-control border-3" id="city" name="city" required>
+          <div class="invalid-feedback">Please enter a city</div>
+        </div>
+        <div class="mb-3">
+          <label for="state" class="form-label">State</label>
+          <input type="text" class="form-control border-3" id="state" name="state" required>
+          <div class="invalid-feedback">Please enter a state</div>
+        </div>
+        <div class="mb-3">
+          <label for="pincode" class="form-label">Pincode</label>
+          <input type="text" class="form-control border-3" id="pincode" name="pincode" required>
+          <div class="invalid-feedback">Please enter a valid pincode</div>
+        </div>
+        <div class="mb-3">
+          <label for="phone" class="form-label">Phone</label>
+          <input type="tel" class="form-control border-3" id="phone" name="phone" required>
+          <div class="invalid-feedback">Please enter a valid phone number</div>
+        </div>
+        <div class="mb-3">
+          <label for="altphone" class="form-label">Alternative Phone</label>
+          <input type="tel" class="form-control border-3" id="altphone" name="altphone" required>
+          <div class="invalid-feedback">Please enter a valid alternative phone number</div>
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" name="isDefault" id="isDefault" class="form-check-input" value="true">
+          <label class="form-check-label" for="isDefault">Set as default address</label>
+        </div>
+        
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-primary" onclick="validateAndSaveAddress()">Save Address</button>
+          <button type="button" class="btn btn-outline-secondary" onclick="cancelAddressForm()">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -107,53 +214,242 @@
       <h4>🛒 Order Summary</h4>
       <ul class="list-group mb-3">
         <% cartItems.forEach(item => { %>
-          <li class="list-group-item d-flex justify-content-between lh-sm">
-            <div>
-              <% if (item.productId) { %>
-               
-              <h6 class="my-0"><%= item.productId.productName %></h6>
-              <small class="text-muted">Qty: <%= item.quantity %></small>
+          <li class="list-group-item d-flex justify-content-between lh-sm py-3">
+            <div class="d-flex">
+              <% if (item.productId && item.productId.productImage && item.productId.productImage.length > 0) { %>
+                  <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>" class="product-image">
+                <% } else { %>
+                  <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                    <span class="text-muted">No image</span>
+                  </div>
+                <% } %>
 
-              <% }else{ %>
-                <h6 class="my-0">Product not available</h6>
-                <small class="text-muted">Qty: <%= item.quantity %></small>
+              <div>
+                <% if (item.productId) { %>
+                  <h6 class="my-0"><%= item.productId.productName %></h6>
+                  <small class="text-muted">
+                    <% if (item.productId.brand) { %>Brand: <%= item.productId.brand %><br><% } %>
+                    Qty: <%= item.quantity %>
+                  </small>
+                <% } else { %>
+                  <h6 class="my-0">Product not available</h6>
+                  <small class="text-muted">Qty: <%= item.quantity %></small>
+                <% } %>
+              </div>
+            </div>
+            <div class="text-end">
+              <span>₹<%= item.totalPrice ? item.totalPrice.toFixed(2) : '0.00' %></span>
+              <% if (item.discount && item.discount > 0) { %>
+                <br><small class="text-success">-₹<%= item.discount.toFixed(2) %> off</small>
               <% } %>
             </div>
-            <span class="text-muted">₹<%= item.totalPrice ? '₹' + item.totalPrice : '₹0'  %></span>
           </li>
         <% }) %>
         <li class="list-group-item d-flex justify-content-between">
+          <span>Subtotal</span>
+          <span>₹<%= subtotal ? subtotal.toFixed(2) : total.toFixed(2) %></span>
+        </li>
+        <% if (totalDiscount && totalDiscount > 0) { %>
+        <li class="list-group-item d-flex justify-content-between text-success">
+          <span>Discount</span>
+          <span>-₹<%= totalDiscount.toFixed(2) %></span>
+        </li>
+        <% } %>
+        <li class="list-group-item d-flex justify-content-between">
           <strong>Total</strong>
-          <strong>₹<%= total %></strong>
+          <strong>₹<%= total.toFixed(2) %></strong>
         </li>
       </ul>
 
       <!-- Payment Method -->
       <div class="mb-3">
-        <label class="form-label fw-bold">💳 Payment Method</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="paymentMethod" value="UPI" id="upi" >
+          <label class="form-label fw-bold" for="upi">💳 Payment Method</label>
+        </div>
         <div class="form-check">
           <input class="form-check-input" type="radio" name="paymentMethod" value="COD" id="cod" checked>
           <label class="form-check-label" for="cod">Cash on Delivery</label>
         </div>
-        <!-- For future: Add Razorpay or other options here -->
       </div>
 
-      <button type="submit" class="btn btn-success w-100">Place Order</button>
+     
+        <button type="submit" class="btn btn-success w-100">Place Order</button>      
     </div>
   </form>
 </main>
 
-<!-- Optional SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- JavaScript -->
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('success') === 'true') {
+  function showNewAddressForm() {
+    document.getElementById('editAddressId').value = '';
+    resetAddressForm();
+    document.getElementById('newAddressForm').style.display = 'block';
+  }
+
+  function cancelAddressForm() {
+    document.getElementById('newAddressForm').style.display = 'none';
+    resetAddressForm();
+  }
+
+  function selectAddress(element, addressId) {
+    document.querySelectorAll('.address-card').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
+    document.querySelector(`input[value="${addressId}"]`).checked = true;
+  }
+
+  function editAddress(addressId) {
+    event.stopPropagation();
+    window.location.href = `/editAddress/${addressId}`;
+  }
+
+  function validateAndSaveAddress() {
+    const errorsDiv = document.getElementById('addressFormErrors');
+    errorsDiv.style.display = 'none';
+    errorsDiv.innerHTML = '';
+    
+    const errors = [];
+    
+    // Get all form values
+    const addressType = document.getElementById('addressType').value.trim();
+    const name = document.getElementById('name').value.trim();
+    const landMark = document.getElementById('landMark').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const pincode = document.getElementById('pincode').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const altphone = document.getElementById('altphone').value.trim();
+    
+    // Validate required fields
+    // if (!addressType) errors.push('Address type is required');
+    // if (!name) errors.push('Name is required');
+    // if (!landMark) errors.push('Landmark is required');
+    // if (!city) errors.push('City is required');
+    // if (!state) errors.push('State is required');
+    
+    // // Validate pincode (6 digits for Indian pincode)
+    // if (!pincode) {
+    //   errors.push('Pincode is required');
+    // } else if (!/^\d{6}$/.test(pincode)) {
+    //   errors.push('Pincode must be 6 digits');
+    // }
+    
+    // Validate phone number (10 digits for Indian phone)
+    // if (!phone) {
+    //   errors.push('Phone number is required');
+    // } else if (!/^\d{10}$/.test(phone)) {
+    //   errors.push('Phone number must be 10 digits');
+    // }
+    
+    // Validate alternative phone if provided
+    // if (altphone && !/^\d{10}$/.test(altphone)) {
+    //   errors.push('Alternative phone number must be 10 digits');
+    // }
+    
+    // Display errors if any
+    // if (errors.length > 0) {
+    //   errorsDiv.innerHTML = errors.map(error => `<div>${error}</div>`).join('');
+    //   errorsDiv.style.display = 'block';
+    //   return;
+    // }
+    
+    // If validation passes, proceed with saving
+    saveAddress();
+  }
+
+  function saveAddress() {
+    const addressId = document.getElementById('editAddressId').value;
+    
+    const addressData = {
+      addressType: document.getElementById('addressType').value.trim(),
+      name: document.getElementById('name').value.trim(),
+      landMark: document.getElementById('landMark').value.trim(),
+      city: document.getElementById('city').value.trim(),
+      state: document.getElementById('state').value.trim(),
+      pincode: document.getElementById('pincode').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      altphone: document.getElementById('altphone').value.trim(),
+      isDefault: document.getElementById('isDefault').checked
+    };
+
+    fetch('/addAddress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(addressData)
+    })
+    .then(response => {
+      // Check if we got a redirect (your controller uses res.redirect)
+      if (response.redirected) {
+        showSuccessAlert('Address saved successfully');
+        setTimeout(() => {
+          window.location.href = response.url;
+        }, 1500);
+        return { success: true };
+      }
+      
+      // If not redirected, try to parse as JSON
+      if (response.headers.get('content-type')?.includes('application/json')) {
+        return response.json();
+      } else {
+        // If response is successful but not JSON or redirect, consider it success
+        if (response.ok) {
+          showSuccessAlert('Address saved successfully');
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+          return { success: true };
+        } else {
+          throw new Error('Network response was not ok');
+        }
+      }
+    })
+    .then(data => {
+      if (data && !data.success) {
+        showErrorAlert(data.message || 'Failed to save address');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      // Don't show error if already being redirected (which means success)
+      if (!document.hidden) {
+        showSuccessAlert('Address saved successfully');
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      }
+    });
+  }
+
+function resetAddressForm() {
+    const formFields = ['addressType', 'name', 'landMark', 'city', 'state', 'pincode', 'phone', 'altphone'];
+    formFields.forEach(id => {
+      const field = document.getElementById(id);
+      if (field) field.value = '';
+    });
+    document.getElementById('isDefault').checked = false;
+    document.getElementById('addressFormErrors').style.display = 'none';
+    document.getElementById('addressFormErrors').innerHTML = '';
+  }
+
+  function showSuccessAlert(message) {
     Swal.fire({
-      title: 'Order Placed!',
-      text: 'Your order has been successfully placed.',
+      title: 'Success',
+      text: message,
       icon: 'success',
+      confirmButtonText: 'OK'
+    });
+  }
+
+  function showErrorAlert(message) {
+    Swal.fire({
+      title: 'Error',
+      text: message,
+      icon: 'error',
       confirmButtonText: 'OK'
     });
   }
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

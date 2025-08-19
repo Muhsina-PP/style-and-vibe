@@ -10,7 +10,6 @@ const passport = require("passport")
 const multer=require('../helpers/multer');
 const profileUpload = require('../helpers/profileUpload');
 
-
 // Error management
 router.get("/pageNotFound", userController.pageNotFound)
 
@@ -75,6 +74,8 @@ router.post("/addAddress", userAuth, profileController.postAddAddress)
 router.get("/editAddress/:id", userAuth, profileController.getEditAddress)
 router.post("/editAddress/:id", userAuth, profileController.postEditAddress);
 router.get('/deleteAddress/:id', userAuth, profileController.deleteAddress);
+// router.post('/addresses/:id', profileController.postAddAddress);
+
 
 // product management
 router.get("/productDetails", userAuth,productController.productDetails)
@@ -95,6 +96,10 @@ router.post('/remove-from-cart/:itemId', userAuth, cartController.removeFromCart
 
 // Checkout management
 router.get("/orderOfCart", userAuth,cartController.getCheckoutPage)
+router.post("/place-order", userAuth, cartController.placeOrder);
+router.get("/order-success", userAuth, cartController.getOrderSuccess);
+
+
 
 
 module.exports = router;

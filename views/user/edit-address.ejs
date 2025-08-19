@@ -31,7 +31,7 @@
 
 <div class="address-form-wrapper">
   <div class="card">
-    <h3 style="color: #046963; margin-bottom: 30px;">Create User Address</h3>
+    <h3 style="color: #046963; margin-bottom: 30px;">Edit User Address</h3>
     <form id="addressForm" method="POST" action="/editAddress/<%= address._id %>">
         <div class="row mb-3">
           <div class="form-group col-md-4">
@@ -78,6 +78,18 @@
             <input type="number" class="form-control" id="altPhone" name="altphone" value="<%= address.altphone %>">
           </div>
         </div>
+        <div class="form-group form-check mb-3">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="isDefault"
+            name="isDefault"
+            value="true"
+            <%= address.isDefault ? "checked" : "" %>
+          >
+          <label class="form-check-label" for="isDefault">Set as Default Address</label>
+        </div>
+
       
         <div id="formErrors" class="mb-3"></div>
       

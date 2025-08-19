@@ -3,7 +3,7 @@ const {Schema} = mongoose;
 const {v4:uuidv4} = require ("uuid");
 const orderSchema = new Schema ({
   orderId :{
-    type : string,
+    type : String,
     default : ()=>uuidv4(),
     unique : true
   },
@@ -43,7 +43,7 @@ const orderSchema = new Schema ({
     type : Date
   },
   status : {
-    type : string,
+    type : String,
     required :true,
     enum : ["Pending", "Processing", "Shipped", "Delivered" ,"Cancelled", "Return request", "Returned"]
   },

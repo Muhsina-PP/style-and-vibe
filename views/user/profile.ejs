@@ -115,7 +115,7 @@
                       <td class="text-end">
                         <a href="/editAddress/<%= address._id %>" class="btn btn-sm btn-outline-primary me-1">Edit</a>
                         
-                        <a href="/deleteAddress/<%= address._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure want to delete this address?')">Delete</a>
+                        <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger" onclick="deleteAddress('<%= address._id %>')">Delete</a>
 
                       </td>
                     </tr>
@@ -193,6 +193,10 @@
               <option value="Other">Other</option>
             </select>
           </div>
+          <div class="mb-3 form-check">
+          <input type="checkbox" name="isDefault" id="isDefault" class="form-check-input" value="true">
+          <label class="form-check-label" for="isDefault">Set as default address</label>
+        </div>
           <div class="d-grid">
             <button type="submit" class="btn btn-success">Save Address</button>
           </div>
@@ -225,8 +229,37 @@
 <!-- External JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
+  const form = document.querySelector('form');
+  form.addEventListener('submit', function (e) {
+  e.preventDefault(); // Prevent actual submission for custom handling
+
+  const formData = new FormData(form);
+  if (!form.querySelector('#isDefault').checked) {
+    formData.set('isDefault', 'false');
+  } else {
+    formData.set('isDefault', 'true');
+  }
+
+  // Now send formData to the backend via fetch or AJAX
+  fetch('/addAddress', {
+  method: 'POST',
+  body: formData
+})
+.then(res => res.json())
+.then(data => {
+  if (data.success) {
+    location.reload(); // or update UI dynamically
+  } else {
+    showToast(data.message || 'Something went wrong', 'danger');
+  }
+});
+});
+
+
   // Image Cropper Logic
   document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('profileImageInput');
@@ -353,11 +386,45 @@
       });
   }
 
-  function deleteAddress(addressId) {
-    if (confirm('Are you sure you want to delete this address?')) {
+  // function deleteAddress(addressId) {
+  //   if (confirm('Are you sure you want to delete this address?')) {
+  //     window.location.href = `/deleteAddress/${addressId}`;
+  //   }
+  // }
+function deleteAddress(addressId) {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "This action cannot be undone.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, delete it!'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Option 1: navigate (GET request with redirect)
       window.location.href = `/deleteAddress/${addressId}`;
+
+      // Option 2: use fetch for async delete (if backend supports DELETE)
+      /*
+      fetch(`/deleteAddress/${addressId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('Deleted!', 'Address has been removed.', 'success').then(() => location.reload());
+        } else {
+          Swal.fire('Error!', data.message || 'Could not delete address.', 'error');
+        }
+      })
+      .catch(() => Swal.fire('Error!', 'Request failed.', 'error'));
+      */
     }
-  }
+  });
+}
+
 
   // Reset modal form when opening for new address
   document.getElementById('addAddressModal').addEventListener('hidden.bs.modal', () => {

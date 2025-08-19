@@ -21,22 +21,29 @@ const User = require("../models/userSchema")
 //     res.redirect("/login")
 //   }
 // }
-const userAuth = async (req, res, next) => {
-  try {
-    if (req.session.user) {
-      const user = await User.findById(req.session.user);
+// const userAuth = async (req, res, next) => {
+//   try {
+//     if (req.session.user) {
+//       const user = await User.findById(req.session.user);
 
-      if (user && !user.isBlocked) {
-        next();
-      } else {
-        res.redirect("/");
-      }
-    } else {
-      res.redirect("/");
-    }
-  } catch (error) {
-    console.log("Error in user authentication middleware:", error);
-    res.status(500).send("Internal Server Error");
+//       if (user && !user.isBlocked) {
+//         next();
+//       } else {
+//         res.redirect("/");
+//       }
+//     } else {
+//       res.redirect("/");
+//     }
+//   } catch (error) {
+//     console.log("Error in user authentication middleware:", error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+const userAuth = (req, res, next) => {
+  if (req.session && req.session.user) {
+    next(); // This is important to continue to the updateProfile controller
+  } else {
+    res.redirect('/login');
   }
 };
 

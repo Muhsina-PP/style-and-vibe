@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Placed Successfully</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      display: flex;
+      background-color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .content {
+      flex: 1;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    h1 {
+      color: #28a745;
+      margin-top: 0;
+      font-size: 2.2rem;
+    }
+    
+    p {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    
+    .thank-you {
+      font-size: 1.3rem;
+      color: #444;
+      margin: 25px 0;
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .btn-outline {
+      background-color: transparent;
+      color: #28a745;
+      border: 2px solid #28a745;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary:hover {
+      background-color: #218838;
+    }
+    
+    .btn-outline:hover {
+      background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .illustration {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        margin: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <h1>Order Successful!</h1>
+      
+      <div class="illustration">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="95" fill="#E6F7EB" stroke="#28a745" stroke-width="2"/>
+          <path d="M80 100L90 110L120 80" stroke="#28a745" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M160 60V130C160 137.364 158.448 144.037 155.365 148.335C152.333 152.557 147.73 155 142.5 155H57.5C52.27 155 47.6669 152.557 44.6349 148.335C41.5515 144.037 40 137.364 40 130V60" stroke="#28a745" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M165 65H35L69.6667 45H130.333L165 65Z" fill="#B7E5C3" stroke="#28a745" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      
+      <p class="thank-you">Thank you for your purchase!</p>
+      <p>Your order has been placed successfully and will be delivered soon.</p>
+      
+      <div class="buttons">
+        <a href="/shop" class="btn btn-primary">Continue Shopping</a>
+        <a href="/view-order/<%= orderId %>" class="btn btn-outline">View Order</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

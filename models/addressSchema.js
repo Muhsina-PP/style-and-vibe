@@ -38,9 +38,16 @@ const addressSchema = new Schema ({
     altphone : {
       type : String,
       required : true
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
     }
   }]
 })
 
 const Address = mongoose.model ("Address", addressSchema)
 module.exports = Address;
+
+
+

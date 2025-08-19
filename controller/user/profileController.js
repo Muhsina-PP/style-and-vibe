@@ -73,8 +73,8 @@ const forgotEmailValid = async(req,res)=>{
       if(emailSent){
         req.session.userOtp = otp;
         req.session.email = email;
-        res.render("forgotPass-otp")
         console.log("OTP : ",otp);
+        res.render("forgotPass-otp")
       }else{
         res.json({sucess:false, message : "Failed to sedn OTP, try again"})
       }
@@ -90,6 +90,9 @@ const forgotEmailValid = async(req,res)=>{
 
 const verfiyForgotPassOtp = async (req, res) => {
   try {
+    const userId = req.session.user;
+    if (!userId) return res.redirect("/login");
+
     const enteredOtp = req.body.otp;
     if (enteredOtp === req.session.userOtp) {
       res.json({ success: true, redirectUrl: "/reset-password" });
@@ -371,49 +374,141 @@ const uploadProfileImage = async (req, res) => {
 };
 
 
+// const updateProfile = async (req, res) => {
+//   try {
+//     const userId = req.session.user._id;
+//     const { name, phone } = req.body;
+//     console.log('Request body:', req.body);
+//     console.log('Session user before update:', req.session.user);
+
+//     const updatedUser = await User.findByIdAndUpdate(userId, {
+//       name,
+//       phone
+//     }, { new: true });
+
+//     req.session.user.name = updatedUser.name;
+//     req.session.user.phone = updatedUser.phone;
+
+//     console.log('Updated user from DB:', updatedUser);
+//     console.log('Session user after update:', req.session.user);
+//     res.redirect('/userprofile');
+
+//   } catch (err) {
+//     console.error('Error updating profile:', err);
+//     res.status(500).send('Something went wrong.');
+//   }
+// };
+
 const updateProfile = async (req, res) => {
   try {
-    const userId = req.session.user;
+    // Check if req.session.user is an object or just an ID
+    const userId = req.session.user._id || req.session.user;
+    
     const { name, phone } = req.body;
+    console.log('Request body:', req.body);
+    console.log('Session user before update:', req.session.user);
+    console.log('User ID being used for update:', userId);
 
     const updatedUser = await User.findByIdAndUpdate(userId, {
       name,
       phone
     }, { new: true });
 
-    req.session.user.name = updatedUser.name;
-    req.session.user.phone = updatedUser.phone;
+    console.log('Updated user from DB:', updatedUser);
+    
+    // Update the session with new data
+    if (req.session.user._id) {
+      // If req.session.user is an object
+      req.session.user.name = updatedUser.name;
+      req.session.user.phone = updatedUser.phone;
+    } else {
+      // If req.session.user is just the ID, set the whole user object
+      req.session.user = {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        email: updatedUser.email
+      };
+    }
+    
+    // Explicitly save the session
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session:', err);
+      }
+      console.log('Session user after update:', req.session.user);
+      res.redirect('/userProfile'); // Note: case matters! Changed from '/userprofile'
+    });
 
-    res.redirect('/userprofile');
   } catch (err) {
     console.error('Error updating profile:', err);
     res.status(500).send('Something went wrong.');
   }
 };
 
-const postAddAddress = async(req,res) =>{
+const postAddAddress = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userData = await User.findOne({_id:userId})
-    const {addressType, name, landMark, city, state, pincode, phone, altphone } = req.body;
-    const userAddress =  await Address.findOne({userId : userData._id})
-    if(!userAddress){
-      const newAddress = new Address ({
-        userId : userData._id,
-        address : [{addressType, name, landMark, city, state, pincode, phone, altphone }]
+    const userData = await User.findOne({ _id: userId });
+    const {addressType, name, landMark, city, state, pincode, phone, altphone, isDefault  } = req.body;
+    console.log("isDefault : ",isDefault);
+    
+
+    const userAddress = await Address.findOne({ userId: userData._id });
+
+    if (!userAddress) {
+      const newAddress = new Address({
+        userId: userData._id,
+        address: [{
+          addressType,
+          name,
+          landMark,
+          city,
+          state,
+          pincode,
+          phone,
+          altphone,
+          isDefault
+        }]
       });
       await newAddress.save();
-    }else{
-      userAddress.address.push({addressType, name, landMark, city, state, pincode, phone, altphone })
+    } else {
+      // If isDefault is true, unset others first
+      // if (isDefault) {
+      //   userAddress.address.forEach(addr => addr.isDefault = false);
+      // }
+      if (isDefault) {
+        await Address.updateOne(
+          { userId: userData._id },
+          { $set: { 'address.$[].isDefault': false } }
+        );
+      }
+
+
+      userAddress.address.push({
+        addressType,
+        name,
+        landMark,
+        city,
+        state,
+        pincode,
+        phone,
+        altphone,
+        isDefault
+      });
       await userAddress.save();
     }
+        
     res.redirect("/userProfile")
 
+    // return res.status(200).json({ success: true, message: 'Address added successfully' });
+
   } catch (error) {
-    console.log("Error adding address : ",error);   
-    res.redirect("/pageNotFound");
+    console.error("Error adding address:", error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
-}
+};
+
 
 const getEditAddress = async (req, res) => {
   try {
@@ -462,45 +557,35 @@ const getEditAddress = async (req, res) => {
 
 // const postEditAddress = async (req, res) => {
 //   try {
-//     const data = req.body;
-//     const addressId = req.query.id;
-//     const user = req.session.user;
+//     const { id: addressItemId } = req.params; 
 
-//     const findAddress = await Address.findOne({ "address._id": addressId });
-//     if (!findAddress) {
-//       return res.redirect("/pageNotFound");
-//     }
+//     const updatedData = {
+//       'address.$.addressType': req.body.addressType,
+//       'address.$.name': req.body.name,
+//       'address.$.city': req.body.city,
+//       'address.$.landMark': req.body.landMark,
+//       'address.$.state': req.body.state,
+//       'address.$.pincode': req.body.pincode,
+//       'address.$.phone': req.body.phone,
+//       'address.$.altphone': req.body.altphone,
+//     };
 
 //     await Address.updateOne(
-//       { "address._id": addressId },
-//       {
-//         $set: {
-//           "address.$": {
-//             _id: addressId,
-//             addressType: data.addressType,
-//             name: data.name,
-//             city: data.city,
-//             landMark: data.landMark,
-//             state: data.state,
-//             pincode: data.pincode,
-//             phone: data.phone,
-//             altphone: data.altphone,
-//           },
-//         },
-//       }
+//       { 'address._id': addressItemId }, 
+//       { $set: updatedData }
 //     );
 
-//     return res.redirect("/userProfile");
+//     res.redirect('/userProfile');
 //   } catch (error) {
-//     console.error("Error updating address:", error);
-//     if (!res.headersSent) {
-//       return res.redirect("/pageNotFound");
-//     }
+//     console.error('Error updating address:', error);
+//     res.status(500).send('Something went wrong');
 //   }
 // };
+
 const postEditAddress = async (req, res) => {
   try {
-    const { id: addressItemId } = req.params; 
+    const { id: addressItemId } = req.params;
+    const isDefault = req.body.isDefault === 'true' || req.body.isDefault === true;
 
     const updatedData = {
       'address.$.addressType': req.body.addressType,
@@ -511,10 +596,20 @@ const postEditAddress = async (req, res) => {
       'address.$.pincode': req.body.pincode,
       'address.$.phone': req.body.phone,
       'address.$.altphone': req.body.altphone,
+      'address.$.isDefault': isDefault // include this directly
     };
 
+    if (isDefault) {
+      // Unset all other default addresses
+      await Address.updateOne(
+        { 'address._id': { $ne: addressItemId } },
+        { $set: { 'address.$[].isDefault': false } }
+      );
+    }
+
+    // Now update the selected address
     await Address.updateOne(
-      { 'address._id': addressItemId }, 
+      { 'address._id': addressItemId },
       { $set: updatedData }
     );
 
@@ -524,6 +619,7 @@ const postEditAddress = async (req, res) => {
     res.status(500).send('Something went wrong');
   }
 };
+
 
 const deleteAddress = async (req, res) => {
   try {
