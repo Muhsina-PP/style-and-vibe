@@ -16,9 +16,10 @@ router.get("/pageNotFound", userController.pageNotFound)
 // Home page management
 router.get("/", userController.loadHomepage)
 router.get("/shop", userController.loadShoppingPage)
-router.get("/filter", userAuth, userController.filterProduct)
-router.get("/filterPrice", userAuth, userController.filterByPrice)
-router.post("/search", userAuth, userController.searchProducts)
+// router.get("/filter", userAuth, userController.filterProduct)
+// router.get("/filterPrice", userAuth, userController.filterByPrice)
+
+// router.post("/search", userAuth, userController.searchProducts)
 
 // Signup management
 router.get("/signup", userController.loadSignup)
@@ -65,7 +66,7 @@ router.get("/change-password", userAuth, profileController.changePassword)
 router.post("/change-password", userAuth, profileController.changePasswordValid)
 router.post("/verify-changepassword-otp", userAuth, profileController.verifyChangePasswordOtp)
 router.post('/upload-profile-image', userAuth,profileUpload.single('profileImage'), profileController .uploadProfileImage);
-router.post('/update-profile',userAuth, profileController.updateProfile);
+router.post('/edit-profile',userAuth, profileController.updateProfile);
 
 
 // Address management
@@ -91,14 +92,19 @@ router.get('/cart', userAuth, cartController.getCartPage);
 router.post('/addToCart', userAuth, cartController.addToCart);
 // router.post('/update-cart-quantity', userAuth, cartController.updateCartQuantity);
 router.get('/check-product-in-cart', cartController.checkProductInCart);
-router.post('/remove-from-cart/:itemId', userAuth, cartController.removeFromCart)
+router.post('/remove-from-cart/:itemId', userAuth, cartController.removeFromCart);
 
 
-// Checkout management
+// Checkout and order management
 router.get("/orderOfCart", userAuth,cartController.getCheckoutPage)
 router.post("/place-order", userAuth, cartController.placeOrder);
 router.get("/order-success", userAuth, cartController.getOrderSuccess);
-
+router.get('/my-orders', userAuth, cartController.getUserOrders);
+router.get('/single-order-details-page/:orderId', userAuth, cartController.getSingleOrderPage);
+router.get('/download-invoice/:orderId',userAuth, cartController.downloadInvoice )
+router.post('/cancel-order',userAuth, cartController.cancelOrder)
+router.get('/orders/search', cartController.getUserOrders)
+router.post("/order/:orderId/return/:productId",userAuth, cartController.requestReturn);
 
 
 

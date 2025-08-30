@@ -1,0 +1,538 @@
+<%- include("../../views/partial/admin/header") %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order #<%= order.orderId %> - Details</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .order-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .order-id {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .status-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+        }
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .address-card {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: -22px;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .price-breakdown {
+            background: #f8f9fa;
+            border-radius: 8px;
+            /* padding:,parent: transparent; */
+        }
+        .coupon-applied {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .order-header { background: #6c757d !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Toast Notifications -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Success</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Status updated successfully!
+                </div>
+            </div>
+            <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Error</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Error updating status. Please try again.
+                </div>
+            </div>
+        </div>
+
+        <!-- Header with Back Button -->
+        <div class="row no-print">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom mb-4">
+                    <div>
+                        <a href="/admin/orderDetails" class="btn btn-outline-secondary me-3">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                        </a>
+                        <h2 class="mb-0 d-inline">Order Details</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Header -->
+        <div class="order-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="order-id">#<%= order.orderId %></div>
+                    <p class="mb-2 opacity-75">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Ordered on <%= new Date(order.createdOn).toLocaleDateString('en-IN', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }) %> at <%= new Date(order.createdOn).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) %>
+                    </p>
+                    <% if (order.invoiceDate) { %>
+                    <p class="mb-0 opacity-75">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        Invoice Date: <%= new Date(order.invoiceDate).toLocaleDateString('en-IN') %>
+                    </p>
+                    <% } %>
+                </div>
+                <div class="col-md-4 text-end">
+                    <% 
+                    let statusClass = 'secondary';
+                    const displayStatus = {
+                        'Out Of Delivery': 'Out for Delivery',
+                        'Return request': 'Return Requested'
+                    };
+                    switch(order.status) {
+                        case 'Pending': statusClass = 'warning'; break;
+                        case 'Processing': statusClass = 'info'; break;
+                        case 'Shipped': statusClass = 'primary'; break;
+                        case 'Delivered': statusClass = 'success'; break;
+                        case 'Cancelled': statusClass = 'danger'; break;
+                        case 'Return request': statusClass = 'warning'; break;
+                        case 'Returned': statusClass = 'secondary'; break;
+                    }
+                    %>
+                    <span class="badge bg-<%= statusClass %> status-badge mb-3">
+                        <%= displayStatus[order.status] || order.status %>
+                    </span>
+                    <div class="h4 mb-0">Total: ₹<%= order.finalAmount.toFixed(2) %></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column - Order Items and Timeline -->
+            <div class="col-lg-8">
+                <!-- Coupon Applied Badge -->
+                <% if (order.couponApplied) { %>
+                <div class="mb-4">
+                    <div class="coupon-applied">
+                        <i class="fas fa-ticket-alt me-2"></i>
+                        Coupon Applied - Discount: ₹<%= order.discount.toFixed(2) %>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Order Items -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-bag me-2"></i>
+                            Order Items (<%= order.orderedItems.length %>)
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% order.orderedItems.forEach(item => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <% if (item.product.productImage) { %>
+                                                <img src="/Uploads/re-image/<%= item.product.productImage[0] %>" 
+                                                     alt="<%= item.product.productName %>" 
+                                                     class="product-image me-3">
+                                                <% } else { %>
+                                                <div class="product-image me-3 bg-light d-flex align-items-center justify-content-center">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                                <% } %>
+                                                <div>
+                                                    <h6 class="mb-1"><%= item.product?.productName || 'Product Name' %></h6>
+                                                    <% if (item.product?.description) { %>
+                                                    <small class="text-muted">
+                                                        <%= item.product.description.substring(0, 100) %>...
+                                                    </small>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <strong>₹<%= item.price.toFixed(2) %></strong>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="badge bg-light text-dark px-3 py-2">
+                                                <%= item.quantity %>
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <strong>₹<%= (item.price * item.quantity).toFixed(2) %></strong>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="badge bg-<%= item.status === 'Ordered' ? 'success' : 'danger' %>">
+                                                <%= item.status %>
+                                            </span>
+                                            <% if (item.status === 'Return Requested') { %>
+                                            <form action="/admin/order/<%= order._id %>/handle-return" method="POST" class="d-flex gap-2 mt-2">
+                                                <input type="hidden" name="decision" value="approve">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form action="/admin/order/<%= order._id %>/handle-return" method="POST" class="d-flex gap-2 mt-2">
+                                                <input type="hidden" name="decision" value="reject">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </form>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Timeline -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Order Timeline
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-primary text-white">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div>
+                                    <h6>Order Placed</h6>
+                                    <p class="text-muted mb-0">
+                                        <%= new Date(order.createdOn).toLocaleDateString('en-IN', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }) %>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <% if (order.status === 'Processing' || order.status === 'Shipped' || order.status === 'Out Of Delivery' || order.status === 'Delivered' || order.status === 'Cancelled') { %>
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-info text-white">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div>
+                                    <h6>Order Processing</h6>
+                                    <p class="text-muted mb-0">Your order is being processed</p>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <% if (order.status === 'Shipped' || order.status === 'Out Of Delivery' || order.status === 'Delivered') { %>
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-warning text-white">
+                                    <i class="fas fa-shipping-fast"></i>
+                                </div>
+                                <div>
+                                    <h6>Order Shipped</h6>
+                                    <p class="text-muted mb-0">Your order has been shipped</p>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <% if (order.status === 'Delivered') { %>
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-success text-white">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <h6>Order Delivered</h6>
+                                    <p class="text-muted mb-0">
+                                        <% if (order.invoiceDate) { %>
+                                        Delivered on <%= new Date(order.invoiceDate).toLocaleDateString('en-IN') %>
+                                        <% } else { %>
+                                        Order has been delivered
+                                        <% } %>
+                                    </p>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <% if (order.status === 'Cancelled') { %>
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-danger text-white">
+                                    <i class="fas fa-times"></i>
+                                </div>
+                                <div>
+                                    <h6>Order Cancelled</h6>
+                                    <p class="text-muted mb-0">This order has been cancelled</p>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <% if (order.status === 'Return request' || order.status === 'Returned') { %>
+                            <div class="timeline-item">
+                                <div class="timeline-icon bg-warning text-white">
+                                    <i class="fas fa-undo"></i>
+                                </div>
+                                <div>
+                                    <h6><%= order.status === 'Returned' ? 'Order Returned' : 'Return Requested' %></h6>
+                                    <p class="text-muted mb-0">
+                                        <%= order.status === 'Returned' ? 'Order has been returned' : 'Return request submitted' %>
+                                    </p>
+                                </div>
+                            </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Customer & Price Details -->
+            <div class="col-lg-4">
+                <!-- Customer Information -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Customer Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">Customer Name</label>
+                            <div class="fw-bold"><%= order.address.name %></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Phone Number</label>
+                            <div>
+                                <a href="tel:<%= order.address.phone %>" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1"></i><%= order.address.phone %>
+                                </a>
+                            </div>
+                            <% if (order.address.altphone) { %>
+                            <div>
+                                <a href="tel:<%= order.address.altphone %>" class="text-decoration-none text-muted">
+                                    <i class="fas fa-phone me-1"></i><%= order.address.altphone %> (Alt)
+                                </a>
+                            </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Delivery Address
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="address-card">
+                            <div class="fw-bold mb-2">
+                                <%= order.address.addressType %> Address
+                                <% if (order.address.isDefault) { %>
+                                <span class="badge bg-primary ms-2">Default</span>
+                                <% } %>
+                            </div>
+                            <div><%= order.address.name %></div>
+                            <div><%= order.address.landMark %></div>
+                            <div><%= order.address.city %>, <%= order.address.state %></div>
+                            <div>PIN: <%= order.address.pincode %></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Breakdown -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            Price Breakdown
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="price-breakdown">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Items Total:</span>
+                                <span>₹<%= order.totalPrice.toFixed(2) %></span>
+                            </div>
+                            <% if (order.discount > 0) { %>
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>
+                                    <i class="fas fa-tag me-1"></i>Discount:
+                                </span>
+                                <span>-₹<%= order.discount.toFixed(2) %></span>
+                            </div>
+                            <% } %>
+                            <div class="d-flex justify-content-between fw-bold h5">
+                                <span>Final Amount:</span>
+                                <span class="text-primary">₹<%= order.finalAmount.toFixed(2) %></span>
+                            </div>
+                            <% if (order.couponApplied) { %>
+                            <div class="text-center mt-2">
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    You saved ₹<%= order.discount.toFixed(2) %> with coupon!
+                                </small>
+                            </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Actions -->
+                <div class="card shadow-sm no-print">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Current Status: <strong><%= displayStatus[order.status] || order.status %></strong>
+                            </div>
+                            <% if (order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'Returned') { %>
+                                <form action="/admin/update-order-status/<%= order._id %>" method="POST" id="updateStatusForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Update Order Status:</label>
+                                        <select name="status" class="form-select" required>
+                                            <option value="">Select New Status</option>
+                                            <% 
+                                                const statusFlow = ['Pending', 'Processing', 'Shipped', 'Out Of Delivery', 'Delivered'];
+                                                const currentIndex = statusFlow.indexOf(order.status);
+                                                const availableStatuses = statusFlow.slice(currentIndex + 1);
+                                                const manualStatuses = ['Cancelled', 'Return request', 'Returned'];
+                                                const validStatuses = [...new Set([...availableStatuses, ...manualStatuses])];
+                                            %>
+                                            <% validStatuses.forEach(status => { %>
+                                                <option value="<%= status %>"><%= displayStatus[status] || status %></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100" onclick="return confirmStatusUpdate()">
+                                        <i class="fas fa-sync-alt me-2"></i>Update Order Status
+                                    </button>
+                                </form>
+                            <% } else { %>
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-lock me-2"></i>This order is in final state and cannot be updated.
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmStatusUpdate() {
+            return confirm('Are you sure you want to update the order status?');
+        }
+
+        window.addEventListener('load', function() {
+            const url = new URL(window.location);
+            if (url.searchParams.get('success') === 'updated') {
+                const toast = new bootstrap.Toast(document.getElementById('successToast'));
+                toast.show();
+                url.searchParams.delete('success');
+                window.history.replaceState({}, '', url);
+            }
+            if (url.searchParams.has('error')) {
+                const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+                toast.show();
+                url.searchParams.delete('error');
+                window.history.replaceState({}, '', url);
+            }
+        });
+    </script>
+</body>
+</html>

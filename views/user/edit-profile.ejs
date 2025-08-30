@@ -93,33 +93,17 @@ button[type="submit"]:hover {
     <h2>Edit Your Profile</h2>
 
     <% if (user) { %>
-      <form action="/edit-profile" method="POST" enctype="multipart/form-data">
+      <form action="/edit-profile" method="POST" >
         <div>
           <label>Full Name</label>
           <input type="text" name="name" value="<%= user.name %>" required />
         </div>
 
         <div>
-          <label>Email</label>
-          <input type="email" name="email" value="<%= user.email %>" required />
+          <label>Phone Number</label>
+          <input type="text" name="phone" value="<%= user.phone %>" required />
         </div>
 
-        <div>
-          <label>Change Password</label>
-          <input type="password" name="newPassword" placeholder="New password" />
-        </div>
-
-        <div>
-          <a href="/forgot-password">Forgot Password?</a>
-        </div>
-
-        <div>
-          <label>Change Profile Image</label>
-          <input type="file" name="profileImage" accept="image/*" />
-          <% if (user.profileImage) { %>
-            <img src="/uploads/<%= user.profileImage %>" alt="Profile Image" style="width:100px;height:100px;">
-          <% } %>
-        </div>
 
         <button type="submit">Save Changes</button>
       </form>

@@ -30,25 +30,29 @@ const getBrandPage = async(req, res) =>{
   }
 }
 
+
 // const addBrand = async (req, res) => {
 //   try {
 //     const brandName = req.body.name?.trim();
-//     if (!brandName) {
-//       return res.redirect("/admin/brands?error=InvalidBrandName");
+
+//     if (!brandName || !req.file) {
+//       return res.render("brands", {
+//         data: await Brand.find(), // or whatever you're passing to show the list
+//         error: "Please enter all required details",
+//       });
 //     }
 
 //     const findBrand = await Brand.findOne({ brandName });
 //     if (findBrand) {
-//       return res.redirect("/admin/brands?error=BrandAlreadyExists");
-//     }
-
-//     if (!req.file) {
-//       return res.redirect("/admin/brands?error=NoImageUploaded");
+//       return res.render("brands", {
+//         data: await Brand.find(),
+//         error: "This brand already exists",
+//       });
 //     }
 
 //     const newBrand = new Brand({
-//       brandName: brandName,
-//       brandImage: req.file.filename
+//       brandName,
+//       brandImage: req.file.filename,
 //     });
 
 //     await newBrand.save();
@@ -59,14 +63,28 @@ const getBrandPage = async(req, res) =>{
 //     res.redirect("/pageError");
 //   }
 // };
-
 const addBrand = async (req, res) => {
   try {
     const brandName = req.body.name?.trim();
 
+    // Pagination values (needed even in error case)
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const brandData = await Brand.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    const totalBrands = await Brand.countDocuments();
+    const totalPages = Math.ceil(totalBrands / limit);
+
     if (!brandName || !req.file) {
       return res.render("brands", {
-        data: await Brand.find(), // or whatever you're passing to show the list
+        data: brandData,
+        currentPage: page,
+        totalPages,
+        totalBrands,
         error: "Please enter all required details",
       });
     }
@@ -74,7 +92,10 @@ const addBrand = async (req, res) => {
     const findBrand = await Brand.findOne({ brandName });
     if (findBrand) {
       return res.render("brands", {
-        data: await Brand.find(),
+        data: brandData,
+        currentPage: page,
+        totalPages,
+        totalBrands,
         error: "This brand already exists",
       });
     }

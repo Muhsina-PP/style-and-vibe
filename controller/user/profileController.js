@@ -192,6 +192,8 @@ const postNewPassword = async (req, res) => {
 
 const changeEmail = async(req,res) =>{
   try {
+      console.log("Session on change-email page:", req.session);
+
     res.render("change-email")
   } catch (error) {
     res.redirect("/pageNotFound");
@@ -266,10 +268,9 @@ const updateEmail = async (req, res) => {
 const getEditProfile = async(req,res) =>{
   try {
     const userId = req.session.user;
-    console.log("Session userId:", userId);
 
     const user = await User.findById(req.session.user)
-    console.log("Fetched user:", user);
+    console.log("Fetched user:", userId);
 
     if (!user) {
       return res.redirect('/login'); // or handle missing user
@@ -280,6 +281,55 @@ const getEditProfile = async(req,res) =>{
     res.redirect("/pageNotFound");
   }
 }
+
+const updateProfile = async (req, res) => {
+  try {
+
+    console.log('Request body = ', req.body);
+    // Check if req.session.user is an object or just an ID
+    // const userId = req.session.user._id || req.session.user;
+    const userId = req.session.user;
+    
+    const { name, phone } = req.body;
+    console.log('Session user before update:', req.session.user);
+    console.log('User ID being used for update:', userId);
+
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+      name,
+      phone
+    }, { new: true });
+
+    console.log('Updated user from DB:', updatedUser);
+    
+    // Update the session with new data
+    if (req.session.user._id) {
+      // If req.session.user is an object
+      req.session.user.name = updatedUser.name;
+      req.session.user.phone = updatedUser.phone;
+    } else {
+      // If req.session.user is just the ID, set the whole user object
+      req.session.user = {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        phone: updatedUser.phone,
+        email: updatedUser.email
+      };
+    }
+    
+    // Explicitly save the session
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session:', err);
+      }
+      console.log('Session user after update:', req.session.user);
+      res.redirect('/userProfile'); 
+    });
+
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).send('Something went wrong.');
+  }
+};
 
 const changePassword = async(req,res) =>{
   try {
@@ -399,52 +449,7 @@ const uploadProfileImage = async (req, res) => {
 //   }
 // };
 
-const updateProfile = async (req, res) => {
-  try {
-    // Check if req.session.user is an object or just an ID
-    const userId = req.session.user._id || req.session.user;
-    
-    const { name, phone } = req.body;
-    console.log('Request body:', req.body);
-    console.log('Session user before update:', req.session.user);
-    console.log('User ID being used for update:', userId);
 
-    const updatedUser = await User.findByIdAndUpdate(userId, {
-      name,
-      phone
-    }, { new: true });
-
-    console.log('Updated user from DB:', updatedUser);
-    
-    // Update the session with new data
-    if (req.session.user._id) {
-      // If req.session.user is an object
-      req.session.user.name = updatedUser.name;
-      req.session.user.phone = updatedUser.phone;
-    } else {
-      // If req.session.user is just the ID, set the whole user object
-      req.session.user = {
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        phone: updatedUser.phone,
-        email: updatedUser.email
-      };
-    }
-    
-    // Explicitly save the session
-    req.session.save((err) => {
-      if (err) {
-        console.error('Error saving session:', err);
-      }
-      console.log('Session user after update:', req.session.user);
-      res.redirect('/userProfile'); // Note: case matters! Changed from '/userprofile'
-    });
-
-  } catch (err) {
-    console.error('Error updating profile:', err);
-    res.status(500).send('Something went wrong.');
-  }
-};
 
 const postAddAddress = async (req, res) => {
   try {

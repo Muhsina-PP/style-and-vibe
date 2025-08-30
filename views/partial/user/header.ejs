@@ -84,7 +84,7 @@
                     <div class="header__nav__option">
                         <% if (user) { %> 
                             <div class="dropdown">
-                              <a href="#" class="sign-in-link"><%= user.name %></a>
+                              <a href="" class="sign-in-link"><%= user.name %></a>
                               <div class="dropdown-content">
                                 <a href="/userProfile">Profile</a>
                                 <a href="/logout">Logout</a>
@@ -95,7 +95,7 @@
                             <a href="/signup">Sign Up</a>
                           <% } %>
                           
-       
+                            <a href="/my-orders">Orders</a>
                         <a href="/wishlist"><img src="img/icon/heart.png" alt=""></a>
                         <a href="/cart"><img src="img/icon/cart.png" alt=""> <span></span></a>
                     </div>
@@ -104,8 +104,5 @@
             </div>
             <div class="canvas__open"><i class="fa fa-bars"></i></div>
         </div>
-
-        
-    
     </header>
     <!-- Header Section End -->

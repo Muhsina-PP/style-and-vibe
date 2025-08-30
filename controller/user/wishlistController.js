@@ -17,7 +17,6 @@ const getWishlist = async (req, res) => {
       const products = await Wishlist.findOne({userId}).populate({path : 'products.productId', populate : {path : 'category'}})
       console.log("Products : ",products.products);
 
-
     res.render("wishlist", {
       user,
       wishlist: products.products

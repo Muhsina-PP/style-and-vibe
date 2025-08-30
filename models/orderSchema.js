@@ -20,7 +20,15 @@ const orderSchema = new Schema ({
     price : {
       type : Number,
       default : 0
-    }
+    },
+    status: {
+        type: String,
+        enum: ["Ordered", "Cancelled","Delivered","Return Requested","Return Rejected","Return Approved", "Returned"],
+        default: "Ordered"
+      },
+      returnReason: {
+        type: String 
+      },
   }],
   totalPrice : {
     type : Number,
@@ -34,10 +42,43 @@ const orderSchema = new Schema ({
     type : Number,
     required : true
   },
-  address : {
-    type : Schema.Types.ObjectId,
-    ref : "User",
-    required : true
+  address :{
+    addressType : {
+      type : String,
+      required : true
+    },
+    name :{
+      type : String,
+      required : true
+    },
+    city : {
+      type : String,
+      required : true
+    },
+    landMark :{
+      type : String,
+      required : true
+    },
+    state : {
+      type : String,
+      required : true
+    },
+    pincode : {
+      type : Number,
+      required : true
+    },
+    phone :{
+      type : String,
+      required : true
+    },
+    altphone : {
+      type : String,
+      required : true
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
+    }
   },
   invoiceDate : {
     type : Date
@@ -45,7 +86,7 @@ const orderSchema = new Schema ({
   status : {
     type : String,
     required :true,
-    enum : ["Pending", "Processing", "Shipped", "Delivered" ,"Cancelled", "Return request", "Returned"]
+    enum : ["Pending", "Processing", "Shipped", "Out Of Delivery" ,"Delivered" ,"Cancelled", "Return request", "Returned"]
   },
   createdOn :{
     type : Date,

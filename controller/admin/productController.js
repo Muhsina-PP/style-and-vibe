@@ -22,53 +22,239 @@ const getProductAddPage = async (req,res)=>{
   }
 }
 
-const addProducts = async (req,res)=>{
-  try {
+// const addProducts = async (req,res)=>{
+//   try {
     
-    const products = req.body;
-    const productExists = await Product.findOne({
-      productName : products.productName
-    })
-    if(!productExists){
-      const images = []
-      if(req.files && req.files.length>0){
-        for(let i=0; i<req.files.length; i++){
-          const originalImagePath = req.files[i].path;
-          const resizedImagePath = path.join('public','uploads','product-images', req.files[i].filename)
-          await sharp(originalImagePath).resize({width:440, height:440}).toFile(resizedImagePath)
-          images.push(req.files[i].filename)
-        }
-      }
-      const categoryId = await Category.findOne({name : products.category})
-      if(!categoryId){
-        return res.status(400).json("Invalid category name")
-      }
+//     const products = req.body;
+//     const productExists = await Product.findOne({
+//       productName : products.productName
+//     })
+//     if(!productExists){
+//       const images = []
+//       if(req.files && req.files.length>0){
+//         for(let i=0; i<req.files.length; i++){
+//           const originalImagePath = req.files[i].path;
+//           const resizedImagePath = path.join('public','uploads','product-images', req.files[i].filename)
+//           await sharp(originalImagePath).resize({width:440, height:440}).toFile(resizedImagePath)
+//           images.push(req.files[i].filename)
+//         }
+//       }
+//       const categoryId = await Category.findOne({name : products.category})
+//       if(!categoryId){
+//         return res.status(400).json("Invalid category name")
+//       }
 
-      const newProduct = new Product({
-        productName : products.productName,
-        description : products.description,
-        brand : products.brand,
-        category : categoryId._id,
-        regularPrice : Number(products.regularPrice),
-        salesPrice : Number(products.salesPrice),
-        createdOn : new Date(),
-        quantity : products.quantity,
-        size : products.size,
-        color : products.color,
-        productImage : images,
-        status : 'Available'
-      })
-      await newProduct.save();
-      return res.redirect("/admin/addProducts")
-    }else{
-      return res.status(400).json("Product already exists, pls try with another name..")
+//       const newProduct = new Product({
+//         productName : products.productName,
+//         description : products.description,
+//         brand : products.brand,
+//         category : categoryId._id,
+//         regularPrice : Number(products.regularPrice),
+//         salesPrice : Number(products.salesPrice),
+//         createdOn : new Date(),
+//         quantity : products.quantity,
+//         size : products.size,
+//         color : products.color,
+//         productImage : images,
+//         status : 'Available'
+//       })
+//       await newProduct.save();
+//       return res.redirect("/admin/addProducts")
+//     }else{
+//       return res.status(400).json("Product already exists, pls try with another name..")
+//     }
+
+//   } catch (error) {
+//     console.error("Error saving product : ", error)
+//     return res.redirect("/pageError")
+//   }
+// }
+
+
+
+// const addProducts = async (req, res) => {
+//   try {
+//     const products = req.body;
+
+//     const processedImages = [];
+
+//     if (req.files && req.files.length > 0) {
+//       for (const file of req.files) {
+//         const outputFilePath = path.join(
+//           __dirname,
+//           "../public/uploads/re-image",
+//           `resized-${Date.now()}-${file.originalname}`
+//         );
+
+//         // Resize + compress
+//         await sharp(file.path)
+//           .resize(800, 800, { fit: "cover" }) // Change size if needed
+//           .toFormat("jpeg")
+//           .jpeg({ quality: 80 })
+//           .toFile(outputFilePath);
+
+//         // Add processed image path
+//         processedImages.push(`/uploads/re-image/${path.basename(outputFilePath)}`);
+
+//         // Delete original uploaded file from temp
+//         fs.unlinkSync(file.path);
+//       }
+//     }
+
+//     const newProduct = new Product({
+//       productName: products.productName,
+//       description: products.description,
+//       brand: products.brand,
+//       regularPrice: products.regularPrice,
+//       salesPrice: products.salesPrice,
+//       color: products.color,
+//       category: products.category,
+//       quantity: products.quantity,
+//       images: processedImages
+//     });
+
+//     await newProduct.save();
+
+//     res.redirect("/admin/products");
+//   } catch (error) {
+//     console.error("Error adding product:", error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
+
+const addProducts = async (req, res) => {
+  try {
+   
+    console.log("🔍 req.files =", req.files)
+    const products = req.body;
+    const processedImages = [];
+
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
+      console.log("No files uploaded");
+      return res.status(400).json({
+        success: false,
+        message: "At least one image is required"
+      });
     }
 
+    // Create output directory if it doesn't exist
+    const outputDir = path.join(__dirname, "../public/uploads/re-image");
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Process each uploaded file
+    for (const file of req.files) {
+      try {
+        console.log("Processing file:", file.filename);
+        
+        // Generate unique filename for processed image
+         const outputFilename = file.filename;
+        const outputFilePath = path.join(outputDir, outputFilename);
+
+        // Check if source file exists
+        if (!fs.existsSync(file.path)) {
+          console.error("Source file does not exist:", file.path);
+          continue;
+        }
+
+        // Resize and compress the image
+        
+        // await sharp(file.path)
+        //   .resize(800, 800, { 
+        //     fit: "cover",
+        //     withoutEnlargement: true 
+        //   })
+        //   .toFormat("jpeg")
+        //   .jpeg({ quality: 80 })
+        //   .toFile(outputFilePath);
+
+          await sharp(file.path)
+          .resize(800, 800, {
+            fit: sharp.fit.cover,
+            position: sharp.strategy.entropy
+          })
+          .toFormat("jpeg")
+          .jpeg({ quality: 80 })
+          .toFile(outputFilePath);
+
+
+        // Add the relative path to processed images array
+        processedImages.push(`${outputFilename}`);
+        console.log("Processed image saved:", outputFilename);
+
+        // Delete the original uploaded file
+        // fs.unlinkSync(file.path);
+
+      } catch (fileError) {
+        console.error("Error processing individual file:", fileError);
+        // Continue processing other files even if one fails
+      }
+    }
+
+    // Validate that at least one image was processed successfully
+    if (processedImages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to process any images"
+      });
+    }
+
+      const categoryDoc = await Category.findOne({ name: products.category });
+
+      if (!categoryDoc) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category selected"
+      });
+    }
+
+    // Create new product with processed data
+    const newProduct = new Product({
+      productName: products.productName,
+      description: products.description,
+      brand: products.brand,
+      regularPrice: parseFloat(products.regularPrice),
+      salesPrice: parseFloat(products.salesPrice),
+      color: products.color,
+      category: categoryDoc._id,
+      quantity: parseInt(products.quantity),
+      productImage: processedImages,
+      createdAt: new Date(),
+      isActive: true
+    });
+
+    // Save to database
+    await newProduct.save();
+    console.log("Product saved successfully:", newProduct._id);
+
+    // Success response
+    res.redirect("/admin/products?success=true");
+
   } catch (error) {
-    console.error("Error saving product : ", error)
-    return res.redirect("/pageError")
+    console.error("Error adding product:", error);
+    
+    // Clean up any uploaded files in case of error
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+          try {
+            fs.unlinkSync(file.path);
+          } catch (cleanupError) {
+            console.error("Error cleaning up file:", cleanupError);
+          }
+        }
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'An error occurred'
+    });
   }
-}
+};
 
 const getAllProducts = async(req,res) =>{
 

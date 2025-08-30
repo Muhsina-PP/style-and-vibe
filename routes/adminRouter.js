@@ -6,10 +6,11 @@ const categoryController = require("../controller/admin/categoryController")
 const brandController = require("../controller/admin/brandController")
 const productController = require("../controller/admin/productController")
 const bannerController = require("../controller/admin/bannerController")
+const orderController = require("../controller/admin/orderController")
 const { adminAuth} = require("../middleware/auth")
 const multer = require("multer") 
-const storage = require("../helpers/multer")
-const uploads = multer ({storage : storage})
+const uploads = require("../helpers/multer")
+// const uploads = multer ({storage : storage})
 
 
 router.get("/pageError", adminController.pageError)
@@ -63,5 +64,15 @@ router.get("/banner", adminAuth, bannerController.getBannerPage)
 router.get("/addBanner", adminAuth, bannerController.getAddBannerPAge)
 router.post("/addBanner", adminAuth, uploads.single("images"), bannerController.addBanner)
 router.get("/deleteBanner" ,adminAuth, bannerController.deleteBanner)
+
+// Order management
+router.get('/orderDetails', adminAuth, orderController.getOrders);
+router.get('/single-order-page/:orderId', adminAuth, orderController.getSingleOrderPage);
+router.post('/update-order-status/:orderId', adminAuth, orderController.updateOrderStatus);
+router.get('/orderDetails/:orderId', adminAuth, orderController.getSingleOrderPage)
+// router.post('/order/:orderId/handle-return', adminAuth, orderController.handleReturnRequest);
+router.post('/order/:orderId/handle-return', adminAuth, orderController.handleReturnRequest);
+
+
 
 module.exports = router;

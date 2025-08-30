@@ -5,6 +5,7 @@ const Wishlist = require('../../models/wishlistSchema')
 const Address = require("../../models/addressSchema");
 const Order = require("../../models/orderSchema")
 const mongoose = require("mongoose")
+const PDFDocument = require("pdfkit")
 
 
 const getCartPage = async (req, res) => {
@@ -13,7 +14,7 @@ const getCartPage = async (req, res) => {
 
     if (!userId) return res.redirect('/login');
 
-    let cart = await Cart.findOne({ userId }).populate({
+    let cart = await Cart.findOne( {userId} ).populate({
       path: 'items.productId',
       select: 'productName brand salesPrice salePrice regularPrice stock quantity productImages productImage'
     });
@@ -48,6 +49,9 @@ const getCartPage = async (req, res) => {
     if (validItems.length > 0) {
       await cart.save();
     }
+
+    console.log(validItems, "VAlid items");
+    
 
     res.render('cart', {
       cartItems: validItems,
@@ -127,7 +131,7 @@ const addToCart = async (req, res) => {
           message: `Only ${product.quantity} units available in stock`
         });
       }
-      
+     
       cart.items.push({
         productId: product._id,
         quantity: qty,
@@ -161,91 +165,6 @@ const addToCart = async (req, res) => {
     });
   }
 };
-
-// const updateCartQuantity = async (req, res) => {
-//   try {
-//     const userId = req.session.user;
-//     if (!userId) {
-//       return res.json({
-//         success: false,
-//         message: "Please log in to update your cart"
-//       });
-//     }
-
-//     const { itemId, quantity } = req.body;
-//     const qty = parseInt(quantity);
-
-//     if (!itemId || isNaN(qty) || qty < 1) {
-//       return res.json({
-//         success: false,
-//         message: "Invalid item ID or quantity"
-//       });
-//     }
-
-//     // Find the cart
-//     const cart = await Cart.findOne({ userId });
-//     if (!cart) {
-//       return res.json({
-//         success: false,
-//         message: "Cart not found"
-//       });
-//     }
-
-//     // Find the item in the cart
-//     const cartItem = cart.items.id(itemId);
-//     if (!cartItem) {
-//       return res.json({
-//         success: false,
-//         message: "Item not found in cart"
-//       });
-//     }
-
-//     // Get the product to check quantity
-//     const product = await Product.findById(cartItem.productId);
-//     if (!product) {
-//       return res.json({
-//         success: false,
-//         message: "Product not found"
-//       });
-//     }
-
-//     // Get stock (support both field names)
-//     const stock = product.stock !== undefined ? product.stock : 
-//                  (product.quantity !== undefined ? product.quantity : 0);
-
-//     // Check if requested quantity exceeds stock
-//     if (qty > stock) {
-//       return res.json({
-//         success: false,
-//         message: `Only ${stock} units available in stock`
-//       });
-//     }
-
-//     // Update the quantity and total price
-//     const price = product.salesPrice !== undefined ? product.salesPrice : 
-//                  (product.salePrice !== undefined ? product.salePrice : cartItem.price);
-    
-//     cartItem.quantity = qty;
-//     cartItem.price = price; // Ensure the price is up-to-date
-//     cartItem.totalPrice = price * qty;
-
-//     await cart.save();
-
-//     return res.json({
-//       success: true,
-//       message: "Cart updated successfully",
-//       newQuantity: qty,
-//       newTotal: cartItem.totalPrice
-//     });
-
-//   } catch (err) {
-//     console.error("Error updating cart quantity:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Error updating cart"
-//     });
-//   }
-// };
 
 
 const checkProductInCart = async (req, res) => {
@@ -326,190 +245,7 @@ const removeFromCart = async (req, res) => {
   }
 };
 
-// const getCheckoutPage = async(req,res) =>{
-//   try {
-//     const userId = req.session.user;
-//     if(!userId) return res.redirect("/login")
 
-//     const cart = await Cart.findOne({userId}).populate("items.productId") 
-
-//     let total = 0; 
-//     cart.items.forEach(item =>{
-//       if(item.productId && item.productId.price){
-//         const itemPrice = item.productId.price;
-//         item.totalPrice = item.quantity * itemPrice;
-//         total += item.totalPrice;
-//       }else{
-//         console.log("Product data is missing for item:", item);
-//         item.totalPrice = 0;
-//       }
-      
-//     })
-
-
-//     res.render("checkout", {
-//       cartItems : cart.items,
-//       total : total
-
-//     })
-//   } catch (error) {
-//     console.log("Error getting checkout page : ",error);
-//     res.redirect("/pageNotFound")
-//   }
-// }
-
-// const getCheckoutPage = async(req, res) => {
-//   try {
-//     const userId = req.session.user;
-//     if(!userId) return res.redirect("/login")
-
-//     const cart = await Cart.findOne({userId}).populate("items.productId") 
-//     if(!cart || !cart.items.length) {
-//       return res.render("checkout", { cartItems: [], total: 0, emptyCart: true , addresses :[], user: null, subtotal :0, totalDiscount :0});
-//     }
-
-//     const validCartItems = cart.items.filter(item => item.productId != null);
-
-//     let subtotal = 0;
-//     let totalDiscount = 0;
-
-//     validCartItems.forEach(item => {
-//       // Calculate the item price
-//       const itemPrice = item.price || (item.productId ? item.productId.price : 0);
-      
-//       // Calculate item total price
-//       const itemTotal = item.quantity * itemPrice;
-//       item.totalPrice = itemTotal;
-      
-//       // Add to subtotal
-//       subtotal += itemTotal;
-      
-//       // Calculate discount if applicable
-//       if (item.productId && item.productId.discount && item.productId.discount > 0) {
-//         const discountAmount = (item.productId.discount / 100) * itemTotal;
-//         item.discount = discountAmount;
-//         totalDiscount += discountAmount;
-//       } else {
-//         item.discount = 0;
-//       }
-//     });
-    
-//     // Calculate final total
-//     const total = subtotal - totalDiscount;
-    
-//     // Update cart in database with only valid items
-//     cart.items = validCartItems;
-//     await cart.save();
-    
-//     // Get user's addresses
-//     const addresses = await Address.find({ userId });
-    
-//     // Ensure at least one address is set as default if addresses exist
-//     if (addresses.length > 0 && addresses.length === 0) {
-//       let hasDefault = addresses.some(addr => addr.isDefault === true);
-      
-//       if (!hasDefault && addresses.length > 0) {
-//         // Set the first address as default if no default exists
-//         addresses[0].isDefault = true;
-//         await addresses[0].save();
-//       }
-//     }
-
-//     console.log(validCartItems.map(item => item.productId.productImages));
-
-    
-//     // Get user data
-//     const user = await User.findById(userId);
-    
-//     res.render("checkout", {
-//       cartItems: validCartItems,
-//       subtotal: subtotal,
-//       totalDiscount: totalDiscount,
-//       total: total,
-//       addresses: addresses,
-//       user: user
-//     });
-//   } catch (error) {
-//     console.log("Error getting checkout page:", error);
-//     res.status(500).redirect("/pageNotFound");
-//   }
-// };
-// const getCheckoutPage = async(req, res) => {
-//   try {
-//     const userId = req.session.user;
-//     if(!userId) return res.redirect("/login")
-
-//     const cart = await Cart.findOne({userId}).populate("items.productId") 
-//     if(!cart || !cart.items.length) {
-//       return res.render("checkout", { cartItems: [], total: 0, emptyCart: true , addresses: [], user: null, subtotal: 0, totalDiscount: 0});
-//     }
-
-//     const validCartItems = cart.items.filter(item => item.productId != null);
-
-//     let subtotal = 0;
-//     let totalDiscount = 0;
-
-//     validCartItems.forEach(item => {
-//       // Calculate the item price
-//       const itemPrice = item.price || (item.productId ? item.productId.price : 0);
-      
-//       // Calculate item total price
-//       const itemTotal = item.quantity * itemPrice;
-//       item.totalPrice = itemTotal;
-      
-//       // Add to subtotal
-//       subtotal += itemTotal;
-      
-//       // Calculate discount if applicable
-//       if (item.productId && item.productId.discount && item.productId.discount > 0) {
-//         const discountAmount = (item.productId.discount / 100) * itemTotal;
-//         item.discount = discountAmount;
-//         totalDiscount += discountAmount;
-//       } else {
-//         item.discount = 0;
-//       }
-//     });
-    
-//     // Calculate final total
-//     const total = subtotal - totalDiscount;
-    
-//     // Update cart in database with only valid items
-//     cart.items = validCartItems;
-//     await cart.save();
-    
-//     // Get user's addresses
-//     const addresses = await Address.find({ userId });
-    
-//     // Ensure at least one address is set as default if addresses exist
-//     if (addresses.length > 0) {
-//       let hasDefault = addresses.some(addr => addr.isDefault === true);
-      
-//       if (!hasDefault) {
-//         // Set the first address as default if no default exists
-//         addresses[0].isDefault = true;
-//         await addresses[0].save();
-//       }
-//     }
-    
-//     // Get user data
-//     const user = await User.findById(userId);
-    
-//     // Log the addresses being sent to the template
-//     console.log("Addresses being sent to checkout template:", addresses);
-    
-//     res.render("checkout", {
-//       cartItems: validCartItems,
-//       subtotal: subtotal,
-//       totalDiscount: totalDiscount,
-//       total: total,
-//       addresses: addresses,
-//       user: user
-//     });
-//   } catch (error) {
-//     console.log("Error getting checkout page:", error);
-//     res.status(500).redirect("/pageNotFound");
-//   }
-// };
 const getCheckoutPage = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -597,24 +333,23 @@ const getCheckoutPage = async (req, res) => {
 
 const placeOrder = async (req, res) => {
   try {
-    const userId = req.session.user;
+    const userId = req.session.user; 
     const { selected, paymentMethod } = req.body; // assuming address and payment info is submitted from checkout form
 
-    console.log("HIIII..."); 
     console.log("Address ID and payment method", selected, paymentMethod);
     
     // Get user's cart
-    const cart = await Cart.findOne({ user: userId }).populate('items.productId');
-
+    let objectId = new mongoose.Types.ObjectId(userId);
+    const cart = await Cart.findOne({ userId: objectId }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
       return res.redirect("/?error=emptyCart");
     }
-
+    console.log(cart.items,"items")
     // Check and update product stock
     for (const item of cart.items) {
       const product = item.productId;
-
-      if (product.quantity <= item.quantity) {
+    
+      if (product.quantity < item.quantity) {
         return res.render("checkout", { 
           error: `Insufficient stock for ${product.productName}`,
           cart: cart
@@ -646,73 +381,287 @@ const placeOrder = async (req, res) => {
       quantity: item.quantity,
       price: item.productId.salesPrice,
     }));
-
+    console.log()
+    const address= await Address.find({userId:req.session.user})
+    console.log('sessss:',req.session)
+    console.log(address)
+    const addid = req.body.selectedAddressId
+    // const aAddress=address[0].address[0]
+    const selectedAddress=address[0].address.find(x=>x._id==addid)
+    const addressid = new mongoose.Types.ObjectId(addid)
+    console.log(addressid,"muhsina")
     // Create the order
+    
     const newOrder = new Order({
       user: userId, // Add user reference
       orderedItems,
       totalPrice,
       discount,
       finalAmount,
-      address: addressId,
+      address:selectedAddress,
       paymentMethod, // Include payment method
       invoiceDate: new Date(),
       status: "Pending",
       couponApplied: cart.couponApplied || false,
     });
-
+    
     console.log("New Order : ",newOrder)
-
     await newOrder.save();
-
     // Clear the user's cart
-    await Cart.findOneAndDelete({ user: userId });
+    await Cart.findOneAndDelete({ userId });
 
     // Redirect to order success page
-    res.redirect(`/order-success?orderId=${newOrder._id}`);
+    res.render('order-success',{orderId:newOrder._id})
+    // res.redirect(`/order-success?orderId=${newOrder._id}`);
   } catch (error) {
     console.error("Order placement error:", error);
     res.status(500).render("checkout", { error: "An error occurred while placing your order" });
   }
 };
 
+
 const getOrderSuccess = async (req, res) => {
   try {
+    console.log("hi ")
     const orderId = req.query.orderId;
 
     if (!orderId) {
       return res.redirect("/shop");
     }
 
-    // Find the order by _id 
-    const order = await Order.findById(orderId)
-      .populate("orderedItems.product") // to show product details if needed
-      .populate("address");             // assuming this is user's address (ref: User)
-
+    const order = await Order.findById(orderId);
     if (!order) {
-      return res.redirect("/shop");
+      return res.status(404).render("404", { message: "Order not found" });
     }
 
-    res.render("order-success", {
-      orderId: order._id, // Pass the MongoDB _id for the view
-      orderNumber: order.orderNumber || order._id, // In case you have a separate order number field
-      orderDate: order.invoiceDate,
-      order
-    });
+    return res.render("order-success");
+
   } catch (error) {
-    console.error("Error loading order success page:", error);
-    res.redirect("/shop");
+    console.error("Error getting order success page:", error);
+    return res.status(500).render("error", { message: "Something went wrong. Please try again later." });
   }
 };
 
 
+const getUserOrders = async (req,res) =>{
+  try {
+    const orderId = req.query.orderId;
+    const orders = await Order.find({orderId: { $regex: new RegExp(orderId, 'i') }}).sort({ createdOn: -1 });
+    res.render("my-orders", {orders})
+
+  } catch (error) {
+     console.error('Error fetching orders:', error);
+    res.status(500).send('Server Error');
+  }
+}
+
+const getSingleOrderPage = async (req,res) =>{
+  try {
+    const orderId = req.params.orderId;
+    console.log("Order id :",orderId);
+    
+    const order = await Order.findById(orderId)
+    .populate('orderedItems.product')
+    if(!order){
+      return res.status(404).send('Order not found')
+    }
+    console.log(order)
+    res.render('single-order-details-page', { order });
+
+  } catch (error) {
+    console.error("Error getting single order page : ",error);
+    res.status(500).send('Server Error');
+  }
+}
+
+const generateInvoice = (res, order) => {
+  const PDFDocument = require('pdfkit');
+  const doc = new PDFDocument({ margin: 50 });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename=invoice_${order.orderId}.pdf`);
+
+  doc.pipe(res);
+
+  // Header
+  doc.font('Helvetica-Bold').fontSize(24).fillColor('#2c3e50').text("INVOICE", 50, 50, { align: "left" });
+  doc.fontSize(12).fillColor('#7f8c8d').text("Style And Vibe", 50, 80);
+  doc.text("Colaba Business St, Suite 100", 50, 95);
+  doc.text("Mumbai, India, 864632", 50, 110);
+  doc.text("Email: styleandvibe@company.com", 50, 125);
+
+  // Invoice Details (right-aligned)
+  doc.font('Helvetica').fontSize(10).fillColor('#2c3e50');
+  doc.text(`Order ID: ${order.orderId}`, 350, 50, { align: "right" });
+  doc.text(`Date: ${order.createdOn.toDateString()}`, 350, 75, { align: "right" });
+  doc.text(`Status: ${order.status}`, 350, 90, { align: "right" });
+
+  // Line separator
+  doc.moveTo(50, 150).lineTo(550, 150).strokeColor('#ecf0f1').stroke();
+
+  // Items Table
+  doc.moveDown(2);
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#2c3e50').text("Order Details", 50, 170);
+
+  // Table Header
+  const tableTop = 190;
+  doc.font('Helvetica-Bold').fontSize(10);
+  doc.text("No.", 50, tableTop, { width: 30 });
+  doc.text("Product", 80, tableTop, { width: 250 });
+  doc.text("Quantity", 330, tableTop, { width: 80, align: "right" });
+  doc.text("Price", 410, tableTop, { width: 80, align: "right" });
+  doc.text("Total", 490, tableTop, { width: 60, align: "right" });
+
+  // Table Header Line
+  doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).strokeColor('#ecf0f1').stroke();
+
+  // Table Rows
+  let y = tableTop + 25;
+  order.orderedItems.forEach((item, idx) => {
+    // Extract product name properly
+    const productName = typeof item.product === "object" ? item.product.productName : item.product;
+
+    doc.font('Helvetica').fontSize(10).fillColor('#34495e');
+    doc.text(`${idx + 1}.`, 50, y, { width: 30 });
+    doc.text(productName, 80, y, { width: 250 });
+    doc.text(item.quantity, 330, y, { width: 80, align: "right" });
+    doc.text(`${item.price.toFixed(2)}`, 410, y, { width: 80, align: "right" });
+    doc.text(`${(item.quantity * item.price).toFixed(2)}`, 490, y, { width: 60, align: "right" });
+    y += 20;
+  });
+
+  // Table Footer Line
+  doc.moveTo(50, y).lineTo(550, y).strokeColor('#ecf0f1').stroke();
+
+  // Totals Section
+  y += 20;
+  doc.font('Helvetica').fontSize(10).fillColor('#2c3e50');
+  doc.text(`Subtotal: ${order.totalPrice.toFixed(2)}`, 410, y, { width: 140, align: "right" });
+  doc.text(`Discount: ${order.discount.toFixed(2)}`, 410, y + 15, { width: 140, align: "right" });
+  doc.font('Helvetica-Bold').fontSize(12);
+  doc.text(`Final Amount: ${order.finalAmount.toFixed(2)}`, 410, y + 35, { width: 140, align: "right" });
+
+  // Footer
+  doc.font('Helvetica').fontSize(8).fillColor('#7f8c8d');
+  doc.text("Thank you for your business!", 50, 700, { align: "center" });
+  doc.text("Contact us at info@styleandvibe.com for any inquiries.", 50, 715, { align: "center" });
+
+  doc.end();
+};
+
+
+const downloadInvoice = async(req,res) =>{
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findById(orderId).populate('orderedItems.product')
+    if(!order)
+      return res.status(404).send("Order not found");
+    generateInvoice(res, order);
+    
+  } catch (error) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+}
+
+const cancelOrder = async (req, res) => {
+  try {
+    const { orderId, productId } = req.body;
+    
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    const item = order.orderedItems.find(i => i.product.toString() === productId);
+    if (!item) {
+      return res.status(404).json({ message: 'Product not found in order' });
+    }
+    
+    if (item.status === "Cancelled") {
+      return res.status(400).json({ message: 'Item already cancelled' });
+    }
+    
+    if (item.status === "Delivered" || item.status === "Returned") {
+      return res.status(400).json({ message: 'Cannot cancel delivered or returned items' });
+    }
+    
+    item.status = "Cancelled";
+    
+    const allItemsCancelled = order.orderedItems.every(orderItem => orderItem.status === "Cancelled");
+    
+    if (allItemsCancelled) {
+      order.status = "Cancelled";
+    }
+    
+    await Product.findByIdAndUpdate(productId, {
+      $inc: { quantity: item.quantity }
+    });
+    
+    await order.save();
+    
+    res.json({ 
+      message: 'Item cancelled successfully',
+      orderStatus: order.status,
+      itemStatus: item.status
+    });
+    
+  } catch (error) {
+    console.error('Cancel order error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+const requestReturn = async (req, res) => {
+  try {
+    const { orderId, productId } = req.params;
+    const { reason } = req.body;
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Find the product inside orderedItems
+    const item = order.orderedItems.find(
+      (item) => item.product.toString() === productId
+    );
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Product not found in this order" });
+    }
+
+    // Check if already requested
+    if (item.status === "Return Requested" || item.status === "Returned") {
+      return res.status(400).json({ success: false, message: "Return already requested for this product" });
+    }
+
+    // Update item fields
+    item.status = "Return Requested";
+    item.returnReason = reason;
+    item.returnRequestedAt = new Date();
+
+    await order.save();
+
+    res.json({ success: true, message: "Return request submitted successfully" });
+  } catch (err) {
+    console.error("Error requesting return:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   getCartPage,
   addToCart,
-  // updateCartQuantity,
   checkProductInCart,
   removeFromCart,
   getCheckoutPage,
   placeOrder,
-  getOrderSuccess
+  getOrderSuccess,
+  getUserOrders,
+  getSingleOrderPage,
+  generateInvoice,
+  downloadInvoice,
+  cancelOrder,
+  requestReturn,
 }

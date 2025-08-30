@@ -1,0 +1,424 @@
+<%- include("../../views/partial/admin/header") %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management - Admin Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .order-status-badge {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+        .item-status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .action-buttons .btn {
+            margin-right: 0.25rem;
+            padding: 0.375rem 0.75rem;
+        }
+        .search-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .coupon-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            color: white;
+            border: none;
+        }
+        .order-id {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .address-text {
+            font-size: 0.875rem;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <h2 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Orders Management
+                    </h2>
+                  
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shopping-bag fa-2x text-primary mb-2"></i>
+                        <h4><%= totalOrders || 0 %></h4>
+                        <p class="text-muted mb-0">Total Orders</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h4><%= pendingOrders || 0 %></h4>
+                        <p class="text-muted mb-0">Pending Orders</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h4><%= completedOrders || 0 %></h4>
+                        <p class="text-muted mb-0">Delivered Orders</p>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-rupee-sign fa-2x text-info mb-2"></i>
+                        <h4>₹<%= totalRevenue || 0 %></h4>
+                        <p class="text-muted mb-0">Total Revenue</p>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="search-section mt-4">
+            <form method="GET" action="/admin/orders">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Order ID or Customer Name</label>
+                        <input type="text" class="form-control" name="orderId" 
+                               value="<%= filters?.orderId || '' %>" placeholder="Search by Order ID or customer name">
+                    </div>
+                  
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All Status</option>
+                            <option value="Pending" <%= filters?.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="Processing" <%= filters?.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                            <option value="Shipped" <%= filters?.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="Delivered" <%= filters?.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="Cancelled" <%= filters?.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                            <option value="Return request" <%= filters?.status === 'Return request' ? 'selected' : '' %>>Return Request</option>
+                            <option value="Returned" <%= filters?.status === 'Returned' ? 'selected' : '' %>>Returned</option>
+                        </select>
+                    </div>
+                    <!-- <div class="col-md-2">
+                        <label class="form-label">Date From</label>
+                        <input type="date" class="form-control" name="dateFrom" 
+                               value="<%= filters?.dateFrom || '' %>">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Date To</label>
+                        <input type="date" class="form-control" name="dateTo" 
+                               value="<%= filters?.dateTo || '' %>">
+                    </div> -->
+                </div>
+                <!-- <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                        <a href="/admin/orders" class="btn btn-secondary">
+                            <i class="fas fa-refresh me-2"></i>Reset
+                        </a>
+                    </div>
+                </div> -->
+            </form>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Orders List </h5>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">Showing <%= orders?.length || 0 %> orders</span>
+                        <!-- <select class="form-select form-select-sm" style="width: auto;" onchange="changePerPage(this.value)">
+                            <option value="10" <%= limit === 10 ? 'selected' : '' %>>10 per page</option>
+                            <option value="25" <%= limit === 25 ? 'selected' : '' %>>25 per page</option>
+                            <option value="50" <%= limit === 50 ? 'selected' : '' %>>50 per page</option>
+                        </select> -->
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <% if (orders && orders.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer Details</th>
+                                <th>Order Date</th>
+                                <th>Items</th>
+                                <th>Amount Details</th>
+                                <th>Status</th>
+                                <th>Coupon</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% orders.forEach(order => { %>
+                            <tr>
+                                <td>
+                                    <span class="order-id">#<%= order.orderId %></span>
+                                    <% if (order.invoiceDate) { %>
+                                    <br>
+                                    <!-- <small class="text-success">
+                                        <i class="fas fa-file-invoice"></i> Invoice Generated
+                                    </small> -->
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong><%= order.address.name %></strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-phone"></i> <%= order.address.phone %>
+                                        </small>
+                                        <br>
+                                        <small class="address-text text-muted">
+                                            <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %>
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <%= new Date(order.createdOn).toLocaleDateString('en-IN', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        }) %>
+                                        <br>
+                                        <small class="text-muted">
+                                            <%= new Date(order.createdOn).toLocaleTimeString('en-IN', {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            }) %>
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <span class="badge bg-info mb-1">
+                                            <%= order.orderedItems.length %> items
+                                        </span>
+                                        <br>
+                                        <% order.orderedItems.slice(0, 2).forEach(item => { %>
+                                        <small class="d-block text-muted">
+                                            <%= item.product?.productName || 'Product' %> x<%= item.quantity %>
+                                            <span class="item-status-badge badge bg-<%= item.status === 'Ordered' ? 'success' : 'danger' %>">
+                                                <%= item.status %>
+                                            </span>
+                                        </small>
+                                        <% }) %>
+                                        <% if (order.orderedItems.length > 2) { %>
+                                        <small class="text-muted">+ <%= order.orderedItems.length - 2 %> more...</small>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div>Total: <strong>₹<%= order.totalPrice.toFixed(2) %></strong></div>
+                                        <% if (order.discount > 0) { %>
+                                        <div class="text-success">
+                                            <small>Discount: -₹<%= order.discount.toFixed(2) %></small>
+                                        </div>
+                                        <% } %>
+                                        <!-- <div class="text-primary">
+                                            <strong>Final: ₹<%= order.finalAmount.toFixed(2) %></strong>
+                                        </div> -->
+                                    </div>
+                                </td>
+                                <td>
+                                    <% 
+                                    let statusClass = 'secondary';
+                                    let status = order.status;
+                                    switch(status) {
+                                        case 'Pending': statusClass = 'warning'; break;
+                                        case 'Processing': statusClass = 'info'; break;
+                                        case 'Shipped': statusClass = 'primary'; break;
+                                        case 'Delivered': statusClass = 'success'; break;
+                                        case 'Cancelled': statusClass = 'danger'; break;
+                                        case 'Return request': statusClass = 'warning'; break;
+                                        case 'Returned': statusClass = 'secondary'; break;
+                                    }
+                                    %>
+                                    <span class="badge bg-<%= statusClass %> order-status-badge">
+                                        <%= status %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (order.coupenApplied) { %>
+                                    <span class="badge coupon-badge">
+                                        <i class="fas fa-ticket-alt me-1"></i>Applied
+                                    </span>
+                                    <% } else { %>
+                                    <span class="badge bg-light text-dark">No Coupon</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="/admin/single-order-page/<%= order._id %>" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <!-- <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" title="Update Status">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Pending')">
+                                                    <i class="fas fa-clock text-warning me-2"></i>Pending
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Processing')">
+                                                    <i class="fas fa-cog text-info me-2"></i>Processing
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Shipped')">
+                                                    <i class="fas fa-shipping-fast text-primary me-2"></i>Shipped
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Delivered')">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>Delivered
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Return request')">
+                                                    <i class="fas fa-undo text-warning me-2"></i>Return Request
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Returned')">
+                                                    <i class="fas fa-reply text-secondary me-2"></i>Returned
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" onclick="updateOrderStatus('<%= order._id %>', 'Cancelled')">
+                                                    <i class="fas fa-times-circle me-2"></i>Cancel
+                                                </a></li>
+                                            </ul>
+                                        </div> -->
+                                        <!-- <% if (order.invoiceDate || order.status === 'Delivered') { %>
+                                        <a href="/admin/orders/<%= order._id %>/invoice" class="btn btn-sm btn-outline-success" title="Generate Invoice">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        <% } %> -->
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } else { %>
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h4>No Orders Found</h4>
+                    <p class="text-muted">
+                        <% if (Object.keys(filters || {}).length > 0) { %>
+                        No orders match your current filters. Try adjusting your search criteria.
+                        <% } else { %>
+                        No orders have been placed yet.
+                        <% } %>
+                    </p>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages && totalPages > 1) { %>
+        <nav aria-label="Orders pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %><%= Object.keys(filters || {}).map(key => `&${key}=${encodeURIComponent(filters[key])}`).join('') %>">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                
+                <% 
+                const startPage = Math.max(1, currentPage - 2);
+                const endPage = Math.min(totalPages, currentPage + 2);
+                %>
+                
+                <% if (startPage > 1) { %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=1&limit=<%= limit %><%= Object.keys(filters || {}).map(key => `&${key}=${encodeURIComponent(filters[key])}`).join('') %>">1</a>
+                </li>
+                <% if (startPage > 2) { %>
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                <% } %>
+                <% } %>
+                
+                <% for(let i = startPage; i <= endPage; i++) { %>
+                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %><%= Object.keys(filters || {}).map(key => `&${key}=${encodeURIComponent(filters[key])}`).join('') %>">
+                        <%= i %>
+                    </a>
+                </li>
+                <% } %>
+                
+                <% if (endPage < totalPages) { %>
+                <% if (endPage < totalPages - 1) { %>
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                <% } %>
+                <li class="page-item">
+                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %><%= Object.keys(filters || {}).map(key => `&${key}=${encodeURIComponent(filters[key])}`).join('') %>"><%= totalPages %></a>
+                </li>
+                <% } %>
+                
+                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %><%= Object.keys(filters || {}).map(key => `&${key}=${encodeURIComponent(filters[key])}`).join('') %>">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+            <div class="text-center">
+                <small class="text-muted">
+                    Showing <%= ((currentPage - 1) * limit) + 1 %> to <%= Math.min(currentPage * limit, totalOrders) %> 
+                    of <%= totalOrders %> orders
+                </small>
+            </div>
+        </nav>
+        <% } %>
+    </div>
+
+    <!-- Order Status Update Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Order Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to update this order status?</p>
+                    <div id="statusDetails"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmStatusUpdate">Confirm Update</button>
+                </div>
+            </div>
+        </div>
+    </div>

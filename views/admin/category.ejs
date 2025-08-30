@@ -65,6 +65,7 @@
     .error-message {
       color: red;
     }
+    
   </style>
 </head>
 <body>
@@ -79,6 +80,25 @@
         <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px">
           <input type="text" class="form-control border-0 rounded-pill mt-3" placeholder="Search categories" name="search" />
           <button class="btn" type="submit">Search</button>
+
+      <% if (search && search.length > 0) { %>
+  <a href="/admin/category" 
+     class="btn btn-secondary ms-2" 
+     style="
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        padding: 5px 12px; 
+        font-size: 13px; 
+        border-radius: 5px; 
+        margin-top: 20px;
+        height: 30px;
+     ">
+     Clear
+  </a>
+<% } %>
+
+
           
         </div>
       </form>
@@ -202,12 +222,19 @@
         </div>
       </div>
     </div>
-    <!-- <div class="pagination-container">
-      <a href="#">&laquo; Previous</a>
-      <span class="current-page"></span>
-      <a href="#"></a>
-      <a href="#">Next &raquo;</a>
-    </div> -->
+    <div class="pagination-container d-flex justify-content-center align-items-center mt-4">
+  <% for (let i = 1; i <= totalPages; i++) { %>
+    <% if (i === currentPage) { %>
+      <!-- Active Page -->
+      <span class="btn btn-primary mx-1 active"><%= i %></span>
+    <% } else { %>
+      <!-- Other Pages -->
+      <a href="?page=<%= i %>&search=<%= search %>"
+         class="btn btn-outline-primary mx-1"><%= i %></a>
+    <% } %>
+  <% } %>
+</div>
+
 
     
 

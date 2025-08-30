@@ -1,31 +1,46 @@
 const Category = require("../../models/categorySchema")
 const Product = require("../../models/productSchema")
 
-const categoryInfo = async (req,res)=>{
-  try {
-    
-    const page = parseInt(req.query.page) || 1;
-    const limit =4;
-    const skip =  (page -1) *limit;
 
-    const categoryData = await Category.find({})
-    .sort({createdAt : -1})
-    .skip(skip)
-    .limit(limit)
-    
-    const totalCategories = await Category.countDocuments()
-    const totalPages = Math.ceil(totalCategories/limit)
+
+const categoryInfo = async (req, res) => {
+     
+  try {
+    const search = req.query.search || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = 4;
+    const skip = (page - 1) * limit;
+
+    // Search filter
+    const query = search
+      ? { name: { $regex: search, $options: "i" } }
+      : {};
+
+    // Fetch matching categories
+    const categoryData = await Category.find(query)
+      .sort({ createdAt: -1 }) // Latest first
+      .skip(skip)
+      .limit(limit);
+
+    // Count total categories based on search
+    const totalCategories = await Category.countDocuments(query);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalCategories / limit);
+
     res.render("category", {
-      cat : categoryData,
-      currentPage : page,
-      totalPages : totalPages,
-      totalCategories : totalCategories
-    })
+      cat: categoryData,
+      currentPage: page,
+      totalPages,
+      totalCategories,
+      search,
+    });
   } catch (error) {
-    console.error(error)
-    res.redirect("/admin/pageError")
+    console.error("Error loading categories:", error);
+    res.redirect("/admin/pageError");
   }
-}
+};
+
 
 const addCategory = async(req,res)=>{
   const {name, description} = req.body;
@@ -103,6 +118,7 @@ const removeCategoryOffer = async (req,res)=>{
 
 const getListCategory = async (req,res)=>{
   try {
+    
     const id = req.query.id;
     await Category.updateOne({_id:id},{$set :{isListed :true }})
     res.redirect("/admin/category")
